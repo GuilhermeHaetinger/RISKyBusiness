@@ -17,6 +17,10 @@ class Territories
         @@territories[name]
     end
 
+    def self.getTerritories
+        @@territories.keys
+    end
+
     class Territory
         
         def initialize(name, neighbors, mapPosition)

@@ -10,6 +10,6 @@ class Player
     def getTerritories; @territories end
 
     def addTerritory(territory); @territories.push(territory) end
-    def removeTerritory(territory); @territories.select!{|x| x != territory} end
+    def removeTerritory(territory) @territories.delete(territory) end
    
 end
