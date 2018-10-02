@@ -1,11 +1,17 @@
 require 'ruby2d'
+require 'observer'
 
 class Button
-  def initialize(x,y, colorOn, colorOff)
+  include Observable
+
+  def initialize(x,y, colorOn, colorOff, menu)
     if self.class == Button
       raise 'Trying to instantiate an abstract class'
     end
-    
+
+    @observer = menu
+    self.add_observer(@observer)
+    @clicked = false
     @btnOff = Quad.new(
       x1: x,
       y1: y, 
@@ -56,5 +62,11 @@ class Button
       self.desactive()
     end
   end
+
+  def do()
+    changed
+    notify_observers(self.class.name)
+  end
+
 end
 

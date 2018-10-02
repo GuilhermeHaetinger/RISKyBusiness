@@ -7,8 +7,8 @@ require 'Buttons/OptionsButton'
 
 class Menu
   def initialize()
-    tick = 0
-
+    @onMenu = true
+    @onGame = false
 
     Window.set({ 
       title: "RISKy Business",
@@ -25,9 +25,9 @@ class Menu
       font: "../assets/fonts/Merienda-Regular.ttf"
     )
     @buttons = Array.new
-    @buttons.push(PlayButton.new(250, 190))
-    @buttons.push(OptionsButton.new(250, 250))
-    @buttons.push(ExitButton.new(250, 310))
+    @buttons.push(PlayButton.new(250, 190, self))
+    @buttons.push(OptionsButton.new(250, 250, self))
+    @buttons.push(ExitButton.new(250, 310, self))
   end
 
   def updateButtons()
@@ -50,15 +50,43 @@ class Menu
     @buttons.each{ |button| 
       if button.hovered
         button.do()
+        if button.class == PlayButton
+          @onMenu = false
+          @onGame = true
+        end
       end
     }
+  end
+
+  def updateGame()
+    puts "Atualizando o Game"
+  end
+
+  def update(event)
+    case event
+    when 'PlayButton'
+      puts 'Triggered PlayButton'
+    when 'OptionsButton'
+      puts 'Triggered OptionsButton'
+    when 'ExitButton'
+      puts 'Triggered ExitButton'
+      exit
+    end
+  end
+  
+  def updateLoop()
+    if @onMenu
+      updateButtons()
+    else @onGame
+      updateGame()
+    end
   end
   
   def loop()
     tick = 0
     Window.update do
       if tick % 60 == 0
-        updateButtons()
+        updateLoop()
       end
       tick += 1
     end

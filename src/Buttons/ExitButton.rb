@@ -3,8 +3,8 @@ require 'ruby2d'
 require 'Button'
 
 class ExitButton < Button
-  def initialize(x,y)
-    super(x, y, 'red', 'white')
+  def initialize(x,y, menu)
+    super(x, y, 'red', 'white', menu)
     @title = Text.new(
       x: x+27, 
       y: y+9, 
@@ -14,11 +14,6 @@ class ExitButton < Button
       font: "../assets/fonts/Merienda-Regular.ttf",
       color: 'black'
     )
-  end
-
-  def do()
-    puts 'Game Ended'
-    exit
   end
 end
 
