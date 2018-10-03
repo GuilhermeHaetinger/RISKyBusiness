@@ -15,5 +15,10 @@ class PlayButton < Button
       color: 'black'
     )
   end
+  
+  def release()
+    @title.remove
+    self._release()
+  end
 end
 

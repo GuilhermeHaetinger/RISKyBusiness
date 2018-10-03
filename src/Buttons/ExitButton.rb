@@ -15,5 +15,11 @@ class ExitButton < Button
       color: 'black'
     )
   end
+
+  def release()
+    Window.remove(@title)
+    self._release()
+  end
+
 end
 
