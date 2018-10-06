@@ -1,6 +1,6 @@
-class Button
+class MenuItem
   HOVER_OFFSET = 3
-  def initialize (window, image, x, y, z, callback = nil, hover_image = nil)
+  def initialize (window, image, x, y, z, callback, hover_image = nil)
     @window = window
     @main_image = image
     @hover_image = hover_image

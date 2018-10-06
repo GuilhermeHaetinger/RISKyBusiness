@@ -1,25 +1,20 @@
-$LOAD_PATH << 'buttons'
-require 'ruby2d'
-require 'Button'
+$LOAD_PATH << '.'
+
+require './buttons/Button'
+require './modules/zorder'
 
 class ExitButton < Button
-  def initialize(x,y, menu)
-    super(x, y, 'red', 'white', menu)
-    @title = Text.new(
-      x: x+27, 
-      y: y+9, 
-      z: 2,
-      text: 'Exit', 
-      size: 20,
-      font: "../assets/fonts/Merienda-Regular.ttf",
-      color: 'black'
-    )
+  def initialize(window, x, y)
+    super(window, Gosu::Image.new('../assets/img/exit.png', false), x, y, ZOrder::UI, 
+      lambda{ self.callback }, Gosu::Image.new('../assets/img/exit_hover.png', false))
+
+    @normalButton = Gosu::Image.new('../assets/img/exit.png', false)
+    @hoveredButton = Gosu::Image.new('../assets/img/exit_hover.png', false)
+    @x = x
+    @y = y
   end
 
-  def release()
-    Window.remove(@title)
-    self._release()
+  def callback ()
+    exit()
   end
-
 end
-
