@@ -2,21 +2,23 @@ $LOAD_PATH << '.'
 require 'Game'
 require 'ruby2d'
 require 'Menu'
+require 'modules/Constants'
+include Constants
 
 class Main
   def initialize()
     Window.set({ 
       title: "RISKy Business",
       background: "black",
-      width: 600,
-      height: 450,
+      width: WINDOW_WIDTH,
+      height: WINDOW_HEIGHT,
       z: 0
     })
 
     @onMenu = true
     @onGame = false
     @menu = Menu.new(self)
-    @game = Game.new(self)
+    @game = nil
   end
 
   def mainLoop()
@@ -24,11 +26,17 @@ class Main
     Window.update do
       if tick % 5 == 0
         if @onMenu
+          @game = nil
           if @menu == nil
             @menu = Menu.new(self)
           end
           @menu.loop()
         else @onGame
+          @menu = nil
+          if @game == nil 
+            @game = Game.new(self)
+            @game.initializeTerritories()
+          end
           @game.onGame = true
           @game.play()
         end

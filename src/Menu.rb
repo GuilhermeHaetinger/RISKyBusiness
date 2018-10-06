@@ -3,9 +3,11 @@ require 'ruby2d'
 require 'observer'
 
 require 'Game'
-require 'Buttons/ExitButton'
-require 'Buttons/PlayButton'
-require 'Buttons/OptionsButton'
+require 'buttons/ExitButton'
+require 'buttons/PlayButton'
+require 'buttons/OptionsButton'
+require 'modules/Constants'
+include Constants
 
 class Menu
   include Observable
@@ -17,22 +19,22 @@ class Menu
       path: "../assets/img/main_bg.jpg",
       x: 0,
       y: 0,
-      width: 600,
-      height: 450
+      width: WINDOW_WIDTH,
+      height: WINDOW_HEIGHT
     )
     @title = Text.new(
-      x: 150, 
-      y: 100, 
+      x: WINDOW_WIDTH/2 - 180, 
+      y: WINDOW_HEIGHT/2 - 100, 
       text:"RISKy Business", 
-      size: 40,
+      size: 50,
       font: "../assets/fonts/Merienda-Regular.ttf"
     )
 
     @onMenu = true
     @buttons = Array.new
-    @buttons.push(PlayButton.new(250, 190, self))
-    @buttons.push(OptionsButton.new(250, 250, self))
-    @buttons.push(ExitButton.new(250, 310, self))
+    @buttons.push(PlayButton.new(WINDOW_WIDTH/2 - 85, 480, self))
+    @buttons.push(OptionsButton.new(WINDOW_WIDTH/2 - 85, 550, self))
+    @buttons.push(ExitButton.new(WINDOW_WIDTH/2 - 85, 620, self))
   end
 
   def onMenu=(value)
@@ -47,8 +49,15 @@ class Menu
     end
 
     Window.on :mouse_down do |e|
-      if @onMenu
-        verifyButtonsFunctions(e)
+      @mouseDown = true
+    end
+
+    Window.on :mouse_up do |e|
+      if @mouseDown
+        if @onMenu
+          verifyButtonsFunctions(e)
+        end
+        @mouseDown = false
       end
     end
   end

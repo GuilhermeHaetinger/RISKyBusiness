@@ -1,4 +1,4 @@
-$LOAD_PATH << 'Buttons'
+$LOAD_PATH << 'buttons'
 require 'ruby2d'
 require 'Button'
 

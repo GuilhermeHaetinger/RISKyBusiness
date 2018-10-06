@@ -31,6 +31,4 @@ class Territories
         def getNeighbors; @neighbors end
         def getMapPosition; @mapPosition end
     end
-
-
 end
