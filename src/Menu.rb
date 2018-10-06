@@ -2,6 +2,7 @@ $LOAD_PATH << '.'
 
 require 'MenuItem'
 require './buttons/ExitButton'
+require './buttons/PlayButton'
 
 class Menu
   def initialize (window)
@@ -11,10 +12,8 @@ class Menu
       "../assets/img/main_bg.jpg", 
       tileable: true
     )
-    x = window.width / 2 - 100
-    y = window.height  / 2 - 100
-
     add_button (ExitButton.new(window, 590,500))
+    add_button (PlayButton.new(window, 530,440))
   end
 
   def add_button (button)

@@ -15,6 +15,10 @@ class Button
     @active_image.draw(@x, @y, @z)
   end
 
+  def setActiveImage(image)
+    @active_image = image
+  end
+
   def update ()
     if is_mouse_hovering then
       if !@hover_image.nil? then
