@@ -1,4 +1,6 @@
 module Constants
   WINDOW_HEIGHT = 720
   WINDOW_WIDTH = 1280
+  EMPTY = 0
+  ORGANIZE_PHASE, NORMAL_PHASE = *0..1
 end

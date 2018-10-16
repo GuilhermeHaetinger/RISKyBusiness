@@ -41,9 +41,9 @@ class Button
     (mx >= @x and my >= @y) and (mx <= @x + @active_image.width) and (my <= @y + @active_image.height)
   end
 
-  def clicked ()
+  def clicked (id)
     if is_mouse_hovering && @callback then
-      @callback.call()
+      @callback.call(id)
     end
   end
 end

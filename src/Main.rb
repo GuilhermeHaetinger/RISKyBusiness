@@ -6,9 +6,12 @@ require 'Cursor'
 require 'Game'
 require 'modules/constants'
 require 'modules/zorder'
+require 'modules/auxiliar'
 
 
 class Main < Gosu::Window
+  include Auxiliar
+
   def initialize()
     super(Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT)
     self.caption = 'RISKyBusiness'
@@ -40,17 +43,27 @@ class Main < Gosu::Window
   end
 
   def button_down (id)
-		if id == Gosu::MsLeft && @onMenu
-			@menu.clicked()
-    elsif id == Gosu::MsLeft && @onGame
-      @game.clicked()
+		if isMouseClick(id) && @onMenu
+			@menu.clicked(id)
+    elsif isMouseClick(id) && @onGame
+      @game.clicked(id)
     elsif id == Gosu::KB_RETURN && @onGame
-      @game.changeTurn()
+      @game.pressedKey(id)
     elsif id == Gosu::KB_ESCAPE && @onGame
       @onGame = false
+      @game = nil
       @onMenu = true
     end
-	end
+  end
+  
+  def setOnGame(opt)
+    @onGame = false
+    @game = nil
+  end
+
+  def setOnMenu(opt)
+    @onMenu = true
+  end
 end
 
 main = Main.new.show

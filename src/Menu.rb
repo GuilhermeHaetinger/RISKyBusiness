@@ -34,9 +34,9 @@ class Menu
     end
   end
 
-  def clicked ()
+  def clicked (id)
     @buttons.each do |i|
-        i.clicked()
+        i.clicked(id)
     end
   end
 end

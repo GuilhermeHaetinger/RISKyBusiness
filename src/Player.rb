@@ -1,7 +1,7 @@
 class Player
   def initialize(name, id)
     @name = name
-    @troopsAvailable = 25
+    @troopsAvailable = 8
     @score = 0
     @id = id
   end
@@ -22,7 +22,11 @@ class Player
     return @id
   end
 
-  def decreaseTroops()
-    @troopsAvailable -= 1
+  def decreaseTroops(amount)
+    @troopsAvailable -= amount
+  end
+
+  def increaseTroops(amount)
+    @troopsAvailable += amount
   end
 end
