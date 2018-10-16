@@ -10,6 +10,6 @@ class AttackButton < Button
   end
 
   def callback ()
-    puts 'atacking'
+    puts 'attacking'
   end
 end

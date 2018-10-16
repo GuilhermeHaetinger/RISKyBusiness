@@ -31,16 +31,59 @@ class Game
 
   def initTerritories()
     # TODO Needs to be refactored :D 
-    @territories.push(Territory.new(self,399,481))
-    @territories.push(Territory.new(self,286,592))
-    @territories.push(Territory.new(self,211,478))
-    @territories.push(Territory.new(self,254,393))
-    @territories.push(Territory.new(self,502,390))
-    @territories.push(Territory.new(self,633,362))
-    @territories.push(Territory.new(self,702,463))
-    @territories.push(Territory.new(self,606,495))
-    @territories.push(Territory.new(self,588,617))
-    @territories.push(Territory.new(self,712,580))
+    # Creating territories
+    chile             = Territory.new(self, "Chile", 211, 478) # Chile
+    venezuela         = Territory.new(self, "Venezuela", 254, 393) # Venezuela
+    argentina         = Territory.new(self, "Argentina", 286, 592) # Argentina
+    brazil            = Territory.new(self, "Brazil", 399, 481) # Brazil
+    north_africa      = Territory.new(self, "North Africa", 502, 390) # North Africa
+    south_africa      = Territory.new(self, "South Africa", 588, 617) # South Africa
+    central_africa    = Territory.new(self, "Central Africa", 606, 495) # Central Africa
+    northeast_africa  = Territory.new(self, "Northeast Africa", 633, 362) # Northeast Africa
+    east_africa       = Territory.new(self, "East Africa", 702, 463) # East Africa
+    madagascar        = Territory.new(self, "Madagascar", 712, 580) # Madagascar
+    
+    # Setting adjacent territories
+    adjacents1 = Array[venezuela, argentina, brazil]
+    chile.setAdjacentTerritories(adjacents1)
+    
+    adjacents2 = Array[chile, brazil]
+    venezuela.setAdjacentTerritories(adjacents2)
+
+    adjacents3 = Array[chile, brazil]
+    argentina.setAdjacentTerritories(adjacents3)
+
+    adjacents4 = Array[chile, venezuela, argentina]
+    brazil.setAdjacentTerritories(adjacents4)
+
+    adjacents5 = Array[central_africa, northeast_africa, east_africa]
+    north_africa.setAdjacentTerritories(adjacents5)
+
+    adjacents6 = Array[madagascar, central_africa, east_africa]
+    south_africa.setAdjacentTerritories(adjacents6)
+
+    adjacents7 = Array[north_africa, east_africa, south_africa]
+    central_africa.setAdjacentTerritories(adjacents7)
+
+    adjacents8 = Array[east_africa, north_africa]
+    northeast_africa.setAdjacentTerritories(adjacents8)
+
+    adjacents9 = Array[central_africa, north_africa, northeast_africa, south_africa]
+    east_africa.setAdjacentTerritories(adjacents9)
+
+    adjacents10 = Array[south_africa]
+    madagascar.setAdjacentTerritories(adjacents10)
+
+    @territories.push(chile) # Chile
+    @territories.push(venezuela) # Venezuela
+    @territories.push(argentina) # Argentina
+    @territories.push(brazil) # Brazil
+    @territories.push(north_africa) # North Africa
+    @territories.push(south_africa) # South Africa
+    @territories.push(central_africa) # Central Africa
+    @territories.push(northeast_africa) # Northeast Africa
+    @territories.push(east_africa) # East Africa
+    @territories.push(madagascar) # Madagascar
   end
 
   def randTerritories()

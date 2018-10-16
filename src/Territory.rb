@@ -7,14 +7,16 @@ require './buttons/TerritoryButton'
 require './ui/MiniMenu'
 
 class Territory
-  def initialize(game, x, y)
+  def initialize(game, t_name,  x, y)
     @button = TerritoryButton.new(game, self, x, y)
+    @name = t_name
     @position = [x,y]
     @numOfTroops = 0
     @playerId = nil
     @game = game
     @miniMenu = MiniMenu.new(game, self, x, y)
     @showingMiniMenu = false
+    @adjacentTerritories = Array.new
   end
 
   def getPlayerId()
@@ -33,12 +35,24 @@ class Territory
     return @numOfTroops
   end
 
+  def getAdjacentTerritories()
+    return @adjacentTerritories
+  end
+
   def setPlayer(playerId)
     @playerId = playerId
   end
 
+  def setAdjacentTerritories(territories)
+    for territory in territories
+      @adjacentTerritories.push(territory)
+    end
+  end
+
   def toggleMiniMenu()
-    @showingMiniMenu = !@showingMiniMenu
+    if @numOfTroops > 1 or @showingMiniMenu
+      @showingMiniMenu = !@showingMiniMenu
+    end
     if @showingMiniMenu
       @game.hideOthersMiniMenus(self)
     end
