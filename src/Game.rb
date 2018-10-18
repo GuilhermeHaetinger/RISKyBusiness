@@ -3,6 +3,8 @@ require './modules/constants'
 require 'Territory'
 require './ui/Ui'
 require 'Player'
+require 'Continent'
+require 'Dice'
 class Game
   def initialize (main)
     @main = main
@@ -15,6 +17,7 @@ class Game
     @player2 = Player.new('player2', 1)
     @ui = Ui.new(main, @player1, @player2)
     @territories = Array.new
+    @continents = Array.new
     @playerTurn = @player1
     @state = Constants::ORGANIZE_PHASE
     self.initTerritories()
@@ -81,138 +84,99 @@ class Game
     madagascar        = Territory.new(self, "Madagascar", 712, 580) # Madagascar
 
     # Setting adjacent territories
-    adjacents1 = Array[venezuela, argentina, brazil]
-    chile.setAdjacentTerritories(adjacents1)
+    chile.setAdjacentTerritories(Array[venezuela, argentina, brazil])
     
-    adjacents2 = Array[chile, brazil, mexico]
-    venezuela.setAdjacentTerritories(adjacents2)
+    venezuela.setAdjacentTerritories(Array[chile, brazil, mexico])
 
-    adjacents3 = Array[chile, brazil]
-    argentina.setAdjacentTerritories(adjacents3)
+    argentina.setAdjacentTerritories(Array[chile, brazil])
 
-    adjacents4 = Array[chile, venezuela, argentina]
-    brazil.setAdjacentTerritories(adjacents4)
+    brazil.setAdjacentTerritories(Array[chile, venezuela, argentina])
 
-    adjacents5 = Array[central_africa, egypt, east_africa, westernEU, southEU]
-    north_africa.setAdjacentTerritories(adjacents5)
+    north_africa.setAdjacentTerritories(Array[central_africa, egypt, east_africa, westernEU, southEU])
 
-    adjacents6 = Array[madagascar, central_africa, east_africa]
-    south_africa.setAdjacentTerritories(adjacents6)
+    south_africa.setAdjacentTerritories(Array[madagascar, central_africa, east_africa])
 
-    adjacents7 = Array[north_africa, east_africa, south_africa]
-    central_africa.setAdjacentTerritories(adjacents7)
+    central_africa.setAdjacentTerritories(Array[north_africa, east_africa, south_africa])
 
-    adjacents8 = Array[east_africa, north_africa, southEU, middleEast]
-    egypt.setAdjacentTerritories(adjacents8)
+    egypt.setAdjacentTerritories(Array[east_africa, north_africa, southEU, middleEast])
 
-    adjacents9 = Array[central_africa, north_africa, egypt, south_africa]
-    east_africa.setAdjacentTerritories(adjacents9)
+    east_africa.setAdjacentTerritories(Array[central_africa, north_africa, egypt, south_africa])
 
-    adjacents10 = Array[south_africa]
-    madagascar.setAdjacentTerritories(adjacents10)
+    madagascar.setAdjacentTerritories(Array[south_africa])
 
-    adjacents11 = Array[venezuela, westernUS, easternUS]
-    mexico.setAdjacentTerritories(adjacents11)
+    mexico.setAdjacentTerritories(Array[venezuela, westernUS, easternUS])
 
-    adjacents12 = Array[easternUS, mexico, alberta, ontario]
-    westernUS.setAdjacentTerritories(adjacents12)
+    westernUS.setAdjacentTerritories(Array[easternUS, mexico, alberta, ontario])
 
-    adjacents13 = Array[westernUS, mexico, ontario, quebec]
-    easternUS.setAdjacentTerritories(adjacents13)
+    easternUS.setAdjacentTerritories(Array[westernUS, mexico, ontario, quebec])
 
-    adjacents14 = Array[westernUS, ontario, northwest, alaska]
-    alberta.setAdjacentTerritories(adjacents14)
+    alberta.setAdjacentTerritories(Array[westernUS, ontario, northwest, alaska])
 
-    adjacents15 = Array[westernUS, easternUS, alberta, northwest, quebec, greenland]
-    ontario.setAdjacentTerritories(adjacents15)
+    ontario.setAdjacentTerritories(Array[westernUS, easternUS, alberta, northwest, quebec, greenland])
 
-    adjacents16 = Array[easternUS, ontario, greenland]
-    quebec.setAdjacentTerritories(adjacents16)
+    quebec.setAdjacentTerritories(Array[easternUS, ontario, greenland])
 
-    adjacents17 = Array[northwest, alberta, kamtchatka]
-    alaska.setAdjacentTerritories(adjacents17)
+    alaska.setAdjacentTerritories(Array[northwest, alberta, kamtchatka])
 
-    adjacents18 = Array[alaska, alberta, ontario, greenland]
-    northwest.setAdjacentTerritories(adjacents18)
+    northwest.setAdjacentTerritories(Array[alaska, alberta, ontario, greenland])
 
-    adjacents19 = Array[northwest, quebec, iceland]
-    greenland.setAdjacentTerritories(adjacents19)
+    greenland.setAdjacentTerritories(Array[northwest, quebec, iceland])
 
-    adjacents20 = Array[greenland, britain, scandinavia]
-    iceland.setAdjacentTerritories(adjacents20)
+    iceland.setAdjacentTerritories(Array[greenland, britain, scandinavia])
 
-    adjacents21 = Array[westernEU, scandinavia, northEU]
-    britain.setAdjacentTerritories(adjacents21)
+    britain.setAdjacentTerritories(Array[westernEU, scandinavia, northEU])
 
-    adjacents22 = Array[britain, ukraine]
-    scandinavia.setAdjacentTerritories(adjacents22)
+    scandinavia.setAdjacentTerritories(Array[britain, ukraine])
 
-    adjacents23 = Array[northEU, southEU, britain, north_africa]
-    westernEU.setAdjacentTerritories(adjacents23)
+    westernEU.setAdjacentTerritories(Array[northEU, southEU, britain, north_africa])
 
-    adjacents24 = Array[britain, westernEU, southEU, ukraine]
-    northEU.setAdjacentTerritories(adjacents24)
+    northEU.setAdjacentTerritories(Array[britain, westernEU, southEU, ukraine])
 
-    adjacents25 = Array[scandinavia, northEU, southEU, afghanistan, ural, middleEast]
-    ukraine.setAdjacentTerritories(adjacents25)
+    ukraine.setAdjacentTerritories(Array[scandinavia, northEU, southEU, afghanistan, ural, middleEast])
 
-    adjacents26 = Array[westernEU, northEU, ukraine, middleEast, egypt, north_africa]
-    southEU.setAdjacentTerritories(adjacents26)
+    southEU.setAdjacentTerritories(Array[westernEU, northEU, ukraine, middleEast, egypt, north_africa])
 
-    adjacents27 = Array[egypt, southEU, ukraine, afghanistan, india, east_africa]
-    middleEast.setAdjacentTerritories(adjacents27)
+    middleEast.setAdjacentTerritories(Array[egypt, southEU, ukraine, afghanistan, india, east_africa])
 
-    adjacents28 = Array[ukraine, ural, china, india, middleEast]
-    afghanistan.setAdjacentTerritories(adjacents28)
+    afghanistan.setAdjacentTerritories(Array[ukraine, ural, china, india, middleEast])
 
-    adjacents29 = Array[siberia, ukraine, afghanistan, china]
-    ural.setAdjacentTerritories(adjacents29)
+    ural.setAdjacentTerritories(Array[siberia, ukraine, afghanistan, china])
 
-    adjacents30 = Array[ural, china, yakursk, irkutsk, mongolia, china]
-    siberia.setAdjacentTerritories(adjacents30)
+    siberia.setAdjacentTerritories(Array[ural, china, yakursk, irkutsk, mongolia, china])
 
-    adjacents31 = Array[siberia, irkutsk, kamtchatka]
-    yakursk.setAdjacentTerritories(adjacents31)
+    yakursk.setAdjacentTerritories(Array[siberia, irkutsk, kamtchatka])
 
-    adjacents32 = Array[siberia, yakursk, mongolia, kamtchatka]
-    irkutsk.setAdjacentTerritories(adjacents32)
+    irkutsk.setAdjacentTerritories(Array[siberia, yakursk, mongolia, kamtchatka])
 
-    adjacents33 = Array[siberia, irkutsk, china, kamtchatka, japan]
-    mongolia.setAdjacentTerritories(adjacents33)
+    mongolia.setAdjacentTerritories(Array[siberia, irkutsk, china, kamtchatka, japan])
 
-    adjacents34 = Array[alaska, japan, mongolia, irkutsk, yakursk]
-    kamtchatka.setAdjacentTerritories(adjacents34)
+    kamtchatka.setAdjacentTerritories(Array[alaska, japan, mongolia, irkutsk, yakursk])
 
-    adjacents35 = Array[mongolia, kamtchatka]
-    japan.setAdjacentTerritories(adjacents35)
+    japan.setAdjacentTerritories(Array[mongolia, kamtchatka])
 
-    adjacents36 = Array[mongolia, siberia, ural, afghanistan, india, siam]
-    china.setAdjacentTerritories(adjacents36)
+    china.setAdjacentTerritories(Array[mongolia, siberia, ural, afghanistan, india, siam])
 
-    adjacents37 = Array[middleEast, afghanistan, china, siam]
-    india.setAdjacentTerritories(adjacents37)
+    india.setAdjacentTerritories(Array[middleEast, afghanistan, china, siam])
 
-    adjacents38 = Array[indonesia, india, china]
-    siam.setAdjacentTerritories(adjacents38)
+    siam.setAdjacentTerritories(Array[indonesia, india, china])
 
-    adjacents39 = Array[siam, newGuinea, westAustralia]
-    indonesia.setAdjacentTerritories(adjacents39)
+    indonesia.setAdjacentTerritories(Array[siam, newGuinea, westAustralia])
 
-    adjacents40 = Array[eastAustralia, indonesia, westAustralia]
-    newGuinea.setAdjacentTerritories(adjacents40)
+    newGuinea.setAdjacentTerritories(Array[eastAustralia, indonesia, westAustralia])
 
-    adjacents41 = Array[eastAustralia, indonesia, newGuinea]
-    westAustralia.setAdjacentTerritories(adjacents41)
+    westAustralia.setAdjacentTerritories(Array[eastAustralia, indonesia, newGuinea])
 
-    adjacents42 = Array[newGuinea, westAustralia]
-    eastAustralia.setAdjacentTerritories(adjacents42)
+    eastAustralia.setAdjacentTerritories(Array[newGuinea, westAustralia])
 
-    @territories.push(chile) # Chile
-    @territories.push(venezuela) # Venezuela
-    @territories.push(argentina) # Argentina
-    @territories.push(brazil) # Brazil
+    @territories.push(chile)
+    @territories.push(venezuela)
+    @territories.push(argentina)
+    @territories.push(brazil)
 
-    @territories.push(mexico) # Mexico 
+    southAmerica = Continent.new(self, "South America", Array[chile, venezuela, argentina, brazil], 2)
+    @continents.push(southAmerica)
+
+    @territories.push(mexico) 
     @territories.push(easternUS)
     @territories.push(westernUS)
     @territories.push(quebec)   
@@ -222,6 +186,9 @@ class Game
     @territories.push(northwest)
     @territories.push(greenland)
 
+    northAmerica = Continent.new(self, "North America", Array[mexico, easternUS, westernUS, quebec, ontario, alberta, alaska, northwest, greenland], 5)
+    @continents.push(northAmerica)
+
     @territories.push(iceland)
     @territories.push(britain)
     @territories.push(westernEU)
@@ -229,6 +196,9 @@ class Game
     @territories.push(southEU)
     @territories.push(scandinavia)
     @territories.push(ukraine)
+
+    europe = Continent.new(self, "Europe", Array[iceland, britain, westernEU, northEU, southEU, scandinavia, ukraine], 5)
+    @continents.push(europe)
 
     @territories.push(afghanistan)
     @territories.push(ural)
@@ -243,17 +213,26 @@ class Game
     @territories.push(india)
     @territories.push(siam)
 
+    asia = Continent.new(self, "Asia", Array[afghanistan, ural, siberia, yakursk, kamtchatka, irkutsk, mongolia, japan, china, middleEast, india, siam], 7)
+    @continents.push(asia)
+
     @territories.push(indonesia)
     @territories.push(newGuinea)
     @territories.push(eastAustralia)
     @territories.push(westAustralia)
 
-    @territories.push(north_africa) # North Africa
-    @territories.push(south_africa) # South Africa
-    @territories.push(central_africa) # Central Africa
-    @territories.push(egypt) # Egypt
-    @territories.push(east_africa) # East Africa
-    @territories.push(madagascar) # Madagascar
+    oceania = Continent.new(self, "Oceania", Array[indonesia, newGuinea, eastAustralia, westAustralia], 2)
+    @continents.push(oceania)
+
+    @territories.push(north_africa)
+    @territories.push(south_africa)
+    @territories.push(central_africa)
+    @territories.push(egypt)
+    @territories.push(east_africa)
+    @territories.push(madagascar)
+
+    africa  =Continent.new(self, "Africa", Array[north_africa, south_africa, central_africa, egypt, east_africa, madagascar], 3)
+    @continents.push(africa)    
   end
 
   def randTerritories()
