@@ -19,16 +19,18 @@ class Button
     @active_image = image
   end
 
+  def returnToMainImage()
+    @active_image = @main_image
+  end
+
   def changeImage(image)
     if !@hover_image.nil? then
       @active_image = image
     end
   end
 
-  def returnToOriginalImage()
-    if is_mouse_hovering
-      @active_image = @main_image
-    end
+  def changeMainImage(image)
+    @main_image = image
   end
 
   def update ()

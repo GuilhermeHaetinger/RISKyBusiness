@@ -15,13 +15,16 @@ class Game
     )
     @player1 = Player.new('player1', 0)
     @player2 = Player.new('player2', 1)
-    @ui = Ui.new(main, @player1, @player2)
+    @ui = Ui.new(self, main, @player1, @player2)
     @territories = Array.new
     @continents = Array.new
     @playerTurn = @player1
     @state = Constants::ORGANIZE_PHASE
+    @preSelectedTerritory = nil
+    @conquest = nil #Battle 
     self.initTerritories()
     self.randTerritories()
+    @ui.update()
   end
 
   def changeTurn()
@@ -30,6 +33,7 @@ class Game
     else
       @playerTurn = @player1
     end
+    @ui.update()
   end
 
   def initTerritories()
@@ -239,10 +243,11 @@ class Game
     @territories.each_with_index do |territory, index|
       if index % 2 == 0
         territory.setPlayer(@player1.getId())
-        territory.setActiveImage(Gosu::Image.new('../assets/img/player2_troops.png', false))
+        territory.setActiveImage(Constants::PLAYER1_IMAGE)
       else
         territory.setPlayer(@player2.getId())
-        territory.setActiveImage(Gosu::Image.new('../assets/img/player1_troops.png', false))
+        territory.setActiveImage(Constants::PLAYER2_IMAGE)
+        territory.setMainImage(Constants::PLAYER2_IMAGE)
       end
     end
   end
@@ -253,6 +258,10 @@ class Game
 
   def getState()
     return @state
+  end
+
+  def setState(newState)
+    @state = newState
   end
 
   def playerTurn()
@@ -268,6 +277,56 @@ class Game
     @territories.each do |territory| 
       if territory != argTerritory
         territory.hideMiniMenu()
+      end
+    end
+  end
+
+  def getPreSelectedTerritory()
+    @preSelectedTerritory
+  end
+
+  def setPreSelectedTerritory(preSelectedTerritory)
+    if preSelectedTerritory == nil
+      @territories.each do |territory|
+        territory.returnToNormalState()
+      end
+      if @conquest != nil
+        @conquest.getDefense().setAsMovable()
+      end
+      @preSelectedTerritory = nil
+      return
+    end
+    if preSelectedTerritory.getPlayerId() == @playerTurn.getId()
+      @preSelectedTerritory = preSelectedTerritory
+      if @state == Constants::ATTACK
+        self.paintAttackables()
+      elsif @state == Constants::MANAGEMENT
+        self.paintMovables()
+      end
+    end
+  end
+
+  def getConquest()
+    @conquest
+  end
+
+  def setConquest(conquest)
+    @ui.update()
+    @conquest = conquest
+  end
+
+  def paintAttackables()
+    @preSelectedTerritory.getAdjacentTerritories().each do |territory|
+      if territory.getPlayerId() != @playerTurn.getId()
+        territory.setAsAttackable()
+      end
+    end
+  end 
+
+  def paintMovables()
+    @preSelectedTerritory.getAdjacentTerritories().each do |territory|
+      if territory.getPlayerId() == @playerTurn.getId()
+        territory.setAsMovable()
       end
     end
   end
@@ -294,31 +353,96 @@ class Game
   end
 
   def clicked (id)
-    @territories.each do |territory| 
-      territory.clicked(id)
+    @territories.each do |territory|
+       territory.clicked(id)
     end
     @buttons.each do |i|
-        i.clicked(id)
+      i.clicked(id)
     end
   end
 
   def handleOrganizePhase()
-    if self.organizePhaseEnded()
-      @state = Constants::NORMAL_PHASE
+    if @playerTurn.getTroopsAvailable() != 0
+      @ui.update("MUST EMPTY TROOPS!")
+    elsif organizePhaseEnded()
+      self.changeTurn()
+      @state = Constants::TROOP_PLACEMENT
+      self.initTroopPlacement
+      @ui.update()
+      @territories.each do |territory|
+        territory.updateRoundTroops()
+      end
     else
+      @ui.update()
       self.changeTurn()
     end
   end
 
-  def handleNormalPhase()
+  def initTroopPlacement()
+    player = playerTurn
+    numOfTerritories = 0
+    @territories.each do |territory|
+      if territory.getPlayerId() == player.getId()
+        numOfTerritories += 1
+      end
+    end
+    numOfPlaceableTroops = (numOfTerritories/2).floor
+    player.increaseTroops(numOfPlaceableTroops)
+  end
+
+  def handleTroopPlacement()
+    if @playerTurn.getTroopsAvailable() != 0
+      @ui.update("MUST EMPTY TROOPS!")
+    else
+      self.setState(Constants::ATTACK)
+      @ui.update()
+    end
+  end
+
+  def handleAttack()
+    @territories.each do |territory|
+      territory.updateRoundTroops()
+      territory.returnToNormalState()
+      @conquest = nil
+      @preSelectedTerritory = nil
+    end
+    self.setState(Constants::MANAGEMENT)
+    @ui.update()
+  end
+  
+  def handleVictoryManagement()
+    if @conquest.getDefense().getNumOfTroops() == 0
+      @ui.update("MUST FILL TERRITORY!")
+    else
+      self.setState(Constants::ATTACK)
+      @conquest.getDefense().returnToNormalState()
+      self.setConquest(nil)
+    end
+  end
+
+  def handleManagement()
+    @territories.each do |territory|
+      territory.updateRoundTroops()
+      territory.returnToNormalState()
+      territory.resetRemanagedTroops()
+      @preSelectedTerritory = nil
+    end
+    self.setState(Constants::TROOP_PLACEMENT)
     self.changeTurn()
+    self.initTroopPlacement()
   end
 
   def pressedKey(id)
     if id == Gosu::KB_RETURN && @state == Constants::ORGANIZE_PHASE
       self.handleOrganizePhase()
-    elsif id == Gosu::KB_RETURN && @state == Constants::NORMAL_PHASE
-      self.handleNormalPhase()
+    elsif id == Gosu::KB_RETURN && @state == Constants::TROOP_PLACEMENT
+      self.handleTroopPlacement()
+    elsif id == Gosu::KB_RETURN && @state == Constants::ATTACK
+      self.handleAttack()
+    elsif id == Gosu::KB_RETURN && @state == Constants::VICTORY_MANAGEMENT
+      self.handleVictoryManagement()
+    elsif id == Gosu::KB_RETURN && @state == Constants::MANAGEMENT
+      self.handleManagement()
     elsif id == Gosu::KB_ESCAPE
       @main.setOnGame(false)
       @main.setOnMenu(true)
