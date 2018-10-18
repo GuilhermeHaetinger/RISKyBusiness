@@ -9,8 +9,8 @@ class MiniMenu
     @game = game
     @territory = territory
     @position = [x, y]
-    @attackButton = AttackButton.new(game, x, y)
-    @moveButton = MoveButton.new(game, x, y + 30)
+    @attackButton = AttackButton.new(game, x+60, y)
+    @moveButton = MoveButton.new(game, x+60, y + 30)
 
   end
 

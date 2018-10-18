@@ -1,7 +1,7 @@
 class Player
   def initialize(name, id)
     @name = name
-    @troopsAvailable = 8
+    @troopsAvailable = 20
     @score = 0
     @id = id
   end

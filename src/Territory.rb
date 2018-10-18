@@ -11,7 +11,7 @@ class Territory
     @button = TerritoryButton.new(game, self, x, y)
     @name = t_name
     @position = [x,y]
-    @numOfTroops = 0
+    @numOfTroops = 1
     @playerId = nil
     @game = game
     @miniMenu = MiniMenu.new(game, self, x, y)
