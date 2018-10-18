@@ -49,23 +49,23 @@ class Territory
     end
   end
 
-  # def toggleMiniMenu()
-  #   if @numOfTroops > 1 or @showingMiniMenu
-  #     @showingMiniMenu = !@showingMiniMenu
-  #   end
-  #   if @showingMiniMenu
-  #     @game.hideOthersMiniMenus(self)
-  #   end
-  # end
+  def toggleMiniMenu()
+    if @numOfTroops > 1 or @showingMiniMenu
+      @showingMiniMenu = !@showingMiniMenu
+    end
+    if @showingMiniMenu
+      @game.hideOthersMiniMenus(self)
+    end
+  end
 
-  # def hideMiniMenu()
-  #   @showingMiniMenu = false
-  # end
+  def hideMiniMenu()
+    @showingMiniMenu = false
+  end
 
   def draw() 
     @button.draw()
-    # if @showingMiniMenu
-    #   @miniMenu.draw()
+    if @showingMiniMenu
+      @miniMenu.draw()
     end
   end
 

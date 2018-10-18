@@ -6,6 +6,7 @@ require './modules/constants'
 
 class TerritoryButton < Button
   def initialize(game, territory, x, y)
+    @image = Gosu::Image.new('../assets/img/player1_troops.png', false)
     super(game.getMain(), Gosu::Image.new('../assets/img/player1_troops.png', false), x, y, ZOrder::SPRITES, 
       method(:callback))
     @font = Gosu::Font.new(40)
@@ -19,6 +20,7 @@ class TerritoryButton < Button
   end
 
   def handleOrganizePhase(id)
+    test_image = Gosu::Image.new('../assets/img/attack_territory.png', false)
     if id == Gosu::MsLeft && @game.playerTurn.getTroopsAvailable() > 0
       @territory.increaseTroops(1)
       @game.playerTurn.decreaseTroops(1)
@@ -26,6 +28,9 @@ class TerritoryButton < Button
       @territory.decreaseTroops(1)
       @game.playerTurn.increaseTroops(1)
     end
+
+    # self.setActiveImage(test_image)
+    # super.draw()
   end
 
   def handleNormalPhase(id)
