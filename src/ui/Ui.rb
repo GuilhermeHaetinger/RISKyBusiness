@@ -1,6 +1,5 @@
 $LOAD_PATH << '.'
 
-require './ui/Score'
 require './ui/TroopsAvailable'
 require './ui/GameState'
 

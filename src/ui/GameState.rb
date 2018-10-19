@@ -28,12 +28,14 @@ class GameState
         @text = "CONQUER!"
     elsif @game.getState == Constants::MANAGEMENT
         @text = "REMANAGE!"
+    elsif @game.getState == Constants::GAME_FINISHED
+        @text = "FINISHED!"
     end
   end
 
   def draw()
     @h1.draw_text("#{@text}", 20, 600, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
-    @p.draw_text("#{@subtext}", 900, 675, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
+    @p.draw_text("#{@subtext}", 750, 675, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
   end
 
 

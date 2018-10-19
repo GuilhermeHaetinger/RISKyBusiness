@@ -1,5 +1,6 @@
 class Player
-  def initialize(name, id)
+  def initialize(name, id, objective)
+    @objective = objective
     @name = name
     @troopsAvailable = 10
     @score = 0
@@ -28,5 +29,13 @@ class Player
 
   def increaseTroops(amount)
     @troopsAvailable += amount
+  end
+
+  def getObjective()
+    @objective
+  end
+
+  def isWinner()
+    @objective.isObjectiveFulfilled(@id)
   end
 end

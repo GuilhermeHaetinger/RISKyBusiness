@@ -29,8 +29,6 @@ class Battle
                 @attack.decreaseTroops(1)
             end
         end
-        puts "attack = #{attackDices}"
-        puts "defense = #{defenseDices}"
     end
 
     def getAttack()

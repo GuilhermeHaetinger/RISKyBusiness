@@ -5,6 +5,9 @@ require './ui/Ui'
 require 'Player'
 require 'Continent'
 require 'Dice'
+require 'TerritoryObjective'
+require 'ConquerObjective'
+
 class Game
   def initialize (main)
     @main = main
@@ -13,18 +16,29 @@ class Game
       "../assets/img/MAP.jpg", 
       tileable: true
     )
-    @player1 = Player.new('player1', 0)
-    @player2 = Player.new('player2', 1)
-    @ui = Ui.new(self, main, @player1, @player2)
     @territories = Array.new
     @continents = Array.new
-    @playerTurn = @player1
-    @state = Constants::ORGANIZE_PHASE
+    @objectives = Array.new
+    @state = Constants::SHOWING_OBJECTIVES
     @preSelectedTerritory = nil
     @conquest = nil #Battle 
     self.initTerritories()
+    self.initObjectives()
+    player1objective = rand(@objectives.length)
+    player2objective = player1objective
+    loop do
+      player2objective = rand(@objectives.length)
+      break if player2objective != player1objective
+    end
+    @player1 = Player.new('player1', 0, @objectives[player1objective])
+    @player2 = Player.new('player2', 1, @objectives[player2objective])
+    @ui = Ui.new(self, main, @player1, @player2)
+    @playerTurn = @player1
     self.randTerritories()
-    @ui.update()
+    @hasSeenObj1 = false
+    @hasSeenWarning2 = false
+    @hasSeenObj2 = false
+    @ui.update("Player 2 close your eyes!")
   end
 
   def changeTurn()
@@ -128,9 +142,9 @@ class Game
 
     iceland.setAdjacentTerritories(Array[greenland, britain, scandinavia])
 
-    britain.setAdjacentTerritories(Array[westernEU, scandinavia, northEU])
+    britain.setAdjacentTerritories(Array[westernEU, iceland, scandinavia, northEU])
 
-    scandinavia.setAdjacentTerritories(Array[britain, ukraine])
+    scandinavia.setAdjacentTerritories(Array[britain, iceland, ukraine])
 
     westernEU.setAdjacentTerritories(Array[northEU, southEU, britain, north_africa])
 
@@ -235,8 +249,21 @@ class Game
     @territories.push(east_africa)
     @territories.push(madagascar)
 
-    africa  =Continent.new(self, "Africa", Array[north_africa, south_africa, central_africa, egypt, east_africa, madagascar], 3)
+    africa = Continent.new(self, "Africa", Array[north_africa, south_africa, central_africa, egypt, east_africa, madagascar], 3)
     @continents.push(africa)    
+  end
+
+  def initObjectives()
+    cSAandAS = ConquerObjective.new(self, [@continents[0], @continents[3]], "South America and Asia")
+    cSAandNAandOC = ConquerObjective.new(self, [@continents[0], @continents[1], @continents[4]], "South America, North America and Oceania")
+    cEUandAFandOC = ConquerObjective.new(self, [@continents[2], @continents[4], @continents[5]], "Europe, Oceania and Africa")
+    cNAandAf = ConquerObjective.new(self, [@continents[1], @continents[5]], "North America and Africa")
+    cAFandAS = ConquerObjective.new(self, [@continents[5], @continents[3]], "Africa and Asia")
+    cEUandAS = ConquerObjective.new(self, [@continents[2], @continents[3]], "Europe and Asia")
+
+    territories = TerritoryObjective.new(self, @territories, 35, "35 Territories")
+
+    @objectives = [cSAandAS, cSAandNAandOC, cEUandAFandOC, cNAandAf, cAFandAS, cEUandAS, territories]
   end
 
   def randTerritories()
@@ -271,14 +298,6 @@ class Game
   def add_button (button)
     @buttons.push(button)
     @main
-  end
-
-  def hideOthersMiniMenus(argTerritory)
-    @territories.each do |territory| 
-      if territory != argTerritory
-        territory.hideMiniMenu()
-      end
-    end
   end
 
   def getPreSelectedTerritory()
@@ -361,6 +380,22 @@ class Game
     end
   end
 
+  def handleshowObjectives()
+    if !@hasSeenObj1
+      @ui.update(@player1.getObjective().getName())
+      @hasSeenObj1 = true
+    elsif !@hasSeenWarning2
+      @ui.update("Player 1 close your eyes!")
+      @hasSeenWarning2 = true
+    elsif !@hasSeenObj2
+      @ui.update(@player2.getObjective().getName())
+      @hasSeenObj2 = true
+    else
+      self.setState(Constants::ORGANIZE_PHASE)
+      @ui.update()
+    end
+  end
+
   def handleOrganizePhase()
     if @playerTurn.getTroopsAvailable() != 0
       @ui.update("MUST EMPTY TROOPS!")
@@ -428,12 +463,23 @@ class Game
       @preSelectedTerritory = nil
     end
     self.setState(Constants::TROOP_PLACEMENT)
-    self.changeTurn()
-    self.initTroopPlacement()
+    if @playerTurn.isWinner()
+      self.setState(Constants::GAME_FINISHED)
+      if @playerTurn.getId() == 0
+        @ui.update("PLAYER 1 WON!")
+      else
+        @ui.update("PLAYER 2 WON!")
+      end
+    else
+      self.changeTurn()
+      self.initTroopPlacement()  
+    end
   end
 
   def pressedKey(id)
-    if id == Gosu::KB_RETURN && @state == Constants::ORGANIZE_PHASE
+    if id == Gosu::KB_RETURN && @state == Constants::SHOWING_OBJECTIVES
+      self.handleshowObjectives()
+    elsif id == Gosu::KB_RETURN && @state == Constants::ORGANIZE_PHASE
       self.handleOrganizePhase()
     elsif id == Gosu::KB_RETURN && @state == Constants::TROOP_PLACEMENT
       self.handleTroopPlacement()

@@ -4,7 +4,6 @@ require './buttons/Button'
 require './modules/zorder'
 require './modules/constants'
 require './buttons/TerritoryButton'
-require './ui/MiniMenu'
 
 class Territory
   def initialize(game, t_name,  x, y)
@@ -16,9 +15,11 @@ class Territory
     @numOfRemanaged = 0
     @playerId = nil
     @game = game
-    @miniMenu = MiniMenu.new(game, self, x, y)
-    @showingMiniMenu = false
     @adjacentTerritories = Array.new
+  end
+
+  def getName()
+    @name
   end
 
   def getPlayerId()
@@ -51,24 +52,8 @@ class Territory
     end
   end
 
-  def toggleMiniMenu()
-    if @numOfTroops > 1 or @showingMiniMenu
-      @showingMiniMenu = !@showingMiniMenu
-    end
-    if @showingMiniMenu
-      @game.hideOthersMiniMenus(self)
-    end
-  end
-
-  def hideMiniMenu()
-    @showingMiniMenu = false
-  end
-
   def draw() 
     @button.draw()
-    if @showingMiniMenu
-      @miniMenu.draw()
-    end
   end
 
   def clicked(id)
