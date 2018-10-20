@@ -1,5 +1,6 @@
 $LOAD_PATH << '.'
 
+require 'thread'
 require 'Player'
 require 'Territory'
 require 'Game'
@@ -11,17 +12,29 @@ class Battle
     end
 
     def fight()
-        numOfFights = [@attack.getNumOfTroops() - 1, @defense.getNumOfTroops(), 3].min
+        threads = []
         attackDices = []
-        [@attack.getNumOfTroops()- 1, 3].min.times do |_|
-            attackDices.push(1 + rand(6))
-        end
-        attackDices.sort_by!{|x| -x}
         defenseDices = []
-        [@defense.getNumOfTroops(), 3].min.times do |_|
-            defenseDices.push(1 + rand(6))
+
+        numOfFights = [@attack.getNumOfTroops() - 1, @defense.getNumOfTroops(), 3].min
+        
+        [@attack.getNumOfTroops()- 1, 3].min.times do |_|
+            threads << Thread.new do
+                attackDices.push(1 + rand(6))
+            end
         end
+        
+        [@defense.getNumOfTroops(), 3].min.times do |_|
+            threads << Thread.new do
+                defenseDices.push(1 + rand(6))
+            end
+        end
+
+        threads.map(&:join)
+        
+        attackDices.sort_by!{|x| -x}
         defenseDices.sort_by!{|x| -x}
+
         numOfFights.times do |n|
             if attackDices[n] > defenseDices[n]
                 @defense.decreaseTroops(1)

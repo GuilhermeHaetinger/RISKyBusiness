@@ -267,8 +267,11 @@ class Game
   end
 
   def randTerritories()
+    territoriesDistribution = (0..41).to_a.shuffle
+    territoriesPlayer1, territoriesPlayer2 = territoriesDistribution.each_slice(territoriesDistribution.size/2).to_a
+
     @territories.each_with_index do |territory, index|
-      if index % 2 == 0
+      if territoriesPlayer1.include?(index)
         territory.setPlayer(@player1.getId())
         territory.setActiveImage(Constants::PLAYER1_IMAGE)
       else
@@ -421,8 +424,14 @@ class Game
         numOfTerritories += 1
       end
     end
-    numOfPlaceableTroops = (numOfTerritories/2).floor
+    numOfPlaceableTroops = (numOfTerritories/3).floor
     player.increaseTroops(numOfPlaceableTroops)
+
+    for continent in @continents
+      if (continent.conqueredByPlayer(playerTurn.getId()))
+        player.increaseTroops(continent.getExtraArmies())
+      end
+    end
   end
 
   def handleTroopPlacement()
