@@ -16,7 +16,11 @@ class Button
   end
 
   def setActiveImage(image)
-    @active_image = image
+    if image.kind_of? Gosu::Image
+      @active_image = image
+    else
+      raise 'Image is not an Image Class'
+    end
   end
 
   def returnToMainImage()
