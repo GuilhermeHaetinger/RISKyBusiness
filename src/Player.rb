@@ -23,12 +23,9 @@ class Player
     return @id
   end
 
-  def decreaseTroops(amount)
-    @troopsAvailable -= amount
-  end
-
-  def increaseTroops(amount)
-    @troopsAvailable += amount
+  # Objective 5
+  def changeTroops(fn, amount)
+    @troopsAvailable = @troopsAvailable.send(fn, amount)
   end
 
   def getObjective()

@@ -46,10 +46,15 @@ class Territory
     @playerId = playerId
   end
 
+  # Objective 1
+  # Objective 6
+  def updateAdjacentTerritories(territories)
+    territories.reduce(@adjacentTerritories) { |newAdjacentTerritories, territory|
+      newAdjacentTerritories.push(territory) }
+  end
+
   def setAdjacentTerritories(territories)
-    for territory in territories
-      @adjacentTerritories.push(territory)
-    end
+    @adjacentTerritories = updateAdjacentTerritories(territories)
   end
 
   def draw() 
@@ -61,13 +66,9 @@ class Territory
       @button.clicked(id)
     end
   end
-
-  def increaseTroops(amount)
-    @numOfTroops += amount
-  end
-
-  def decreaseTroops(amount)
-    @numOfTroops -= amount
+  # Objective 5
+  def changeTroops(fn, amount)
+    @numOfTroops = @numOfTroops.send(fn, amount)
   end
 
   def setActiveImage(img)

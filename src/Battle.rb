@@ -37,9 +37,9 @@ class Battle
 
         numOfFights.times do |n|
             if attackDices[n] > defenseDices[n]
-                @defense.decreaseTroops(1)
+                @defense.changeTroops(:-,1)
             else
-                @attack.decreaseTroops(1)
+                @attack.changeTroops(:-,1)
             end
         end
     end

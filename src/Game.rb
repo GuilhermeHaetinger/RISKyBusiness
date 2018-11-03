@@ -425,11 +425,11 @@ class Game
       end
     end
     numOfPlaceableTroops = (numOfTerritories/3).floor
-    player.increaseTroops(numOfPlaceableTroops)
+    player.changeTroops(:+, numOfPlaceableTroops)
 
     for continent in @continents
       if (continent.conqueredByPlayer(playerTurn.getId()))
-        player.increaseTroops(continent.getExtraArmies())
+        player.changeTroops(:+, continent.getExtraArmies())
       end
     end
   end

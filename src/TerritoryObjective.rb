@@ -3,7 +3,7 @@ $LOAD_PATH << '.'
 require 'Continent'
 require 'Objective'
 require './modules/Interface'
-
+require './modules/functional'
 class TerritoryObjective < Objective
   
     def initialize(game, territories, number, name)
@@ -13,14 +13,19 @@ class TerritoryObjective < Objective
         super(name)
     end
 
-    def isObjectiveFulfilled(playerId)
-        num = 0
-        @territories.each do |territory|
-            if territory.getPlayerId() == playerId
-                num += 1
-            end
+    # Objective 8
+    def countObjectives(territories, playerId)
+        if Functional::empty(territories)
+            return 0
+        elsif head(territories).getPlayerId() == playerId
+            return 1 + countObjectives(tail(territories), playerId)
+        else 
+            return 0 + countObjectives(tail(territories), playerId)
         end
-        num >= @number
+    end
+
+    def isObjectiveFulfilled(playerId)
+        countObjectives(@territories, playerId) >= @number
     end
 
 end

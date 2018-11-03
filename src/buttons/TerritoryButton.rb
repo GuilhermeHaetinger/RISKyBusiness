@@ -22,21 +22,21 @@ class TerritoryButton < Button
 
   def handleOrganizePhase(id)
     if id == Gosu::MsLeft && @game.playerTurn.getTroopsAvailable() > 0
-      @territory.increaseTroops(1)
-      @game.playerTurn.decreaseTroops(1)
+      @territory.changeTroops(:+,1)
+      @game.playerTurn.changeTroops(:-,1)
     elsif id == Gosu::MsRight && @territory.getNumOfTroops() > @territory.getRoundTroops()
-      @territory.decreaseTroops(1)
-      @game.playerTurn.increaseTroops(1)
+      @territory.changeTroops(:-,1)
+      @game.playerTurn.changeTroops(:+,1)
     end
   end
 
   def handleTroopPlacement(id)
     if id == Gosu::MsLeft && @game.playerTurn.getTroopsAvailable() > 0
-      @territory.increaseTroops(1)
-      @game.playerTurn.decreaseTroops(1)
+      @territory.changeTroops(:+,1)
+      @game.playerTurn.changeTroops(:-,1)
     elsif id == Gosu::MsRight && @territory.getNumOfTroops() > @territory.getRoundTroops()
-      @territory.decreaseTroops(1)
-      @game.playerTurn.increaseTroops(1)
+      @territory.changeTroops(:-,1)
+      @game.playerTurn.changeTroops(:+,1)
     end
   end
 
@@ -68,11 +68,11 @@ class TerritoryButton < Button
   def handleVictoryManagement(id)
     if @territory == @game.getConquest().getDefense()
       if id == Gosu::MsLeft && @game.getConquest().getDefense().getNumOfTroops() < 3 and @game.getConquest().getAttack().getNumOfTroops() > 1
-        @game.getConquest().getDefense().increaseTroops(1)
-        @game.getConquest().getAttack().decreaseTroops(1)
+        @game.getConquest().getDefense().changeTroops(:+,1)
+        @game.getConquest().getAttack().changeTroops(:-,1)
       elsif id == Gosu::MsRight && @game.getConquest().getDefense().getNumOfTroops() > 0
-        @game.getConquest().getDefense().decreaseTroops(1)
-        @game.getConquest().getAttack().increaseTroops(1)
+        @game.getConquest().getDefense().changeTroops(:-,1)
+        @game.getConquest().getAttack().changeTroops(:+,1)
       end
     end
   end
@@ -87,8 +87,8 @@ class TerritoryButton < Button
       @game.setPreSelectedTerritory(nil)
     elsif preSelect.getAdjacentTerritories().include? @territory and @game.playerTurn().getId() == @territory.getPlayerId()
       if id == Gosu::MsLeft and @game.getPreSelectedTerritory().getNumOfTroops() > 1
-        @territory.increaseTroops(1)
-        @game.getPreSelectedTerritory().decreaseTroops(1)
+        @territory.changeTroops(:+,1)
+        @game.getPreSelectedTerritory().changeTroops(:-,1)
         @game.getPreSelectedTerritory().increaseRemanagedTroops()
         @game.setPreSelectedTerritory(nil)
       end
