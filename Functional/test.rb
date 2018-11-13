@@ -176,7 +176,6 @@ $getAdjacentEnemies = method(:getSpecificAdjacentTerritories).to_proc.curry["!="
 $addTroop = method(:changeTroops).to_proc.curry["+"]
 $decTroop = method(:changeTroops).to_proc.curry["-"]
 
-
 def selectAsAttacker(territoryName, turnPlayer, territories, buttons)
     territory = getTerritory(territoryName, territories)
     territory[:playerId] == turnPlayer ? (paintTroops(Constants::ATTACK_IMAGE, ($getAdjacentEnemies[territory, $mapOfAdjacence, $listOfTerritories]), buttons);puts territoryName;territoryName) : ""
@@ -256,7 +255,7 @@ def battle(attackTroops, defenseTroops)
     puts "-------"
     puts defenseDices
 
-    (0..numOfFights-1).map{|x| puts attackDices[x] > defenseDices[x]}
+    (0..numOfFights-1).map{|x| attackDices[x] > defenseDices[x]}
 end
 
 # ENTER FUNCTIONALITIES
@@ -321,13 +320,14 @@ def enter_attack
     $status = Constants::MANAGEMENT
 end
 
-# def ENTER_victoryManagement
-#     if $conqueredTerritory[:troops] != 0
-#         #SHOW MUST MOVE AT LEAST ONE TROOP
-#     else
-#         $status = Constants::ATTACK
-#     end
-# end
+def enter_victoryManagement
+    if getTerritory($attacked, $listOfTerritories)[:troops] == 0
+        puts "AT LEAST ONE TROOP
+        "#SHOW MUST MOVE AT LEAST ONE TROOP
+    else
+        $status = Constants::ATTACK
+    end
+end
 
 # def ENTER_management
 #     $status = Constants::TROOP_PLACEMENT
@@ -374,14 +374,22 @@ def click_attacked(btn, typeOfClick)
     end
 end
 
-# def CLICK_victoryManagement(btn, typeOfClick)
-#     case [btn[:name], typeOfClick]    
-#     when Qo[$attacked, Gosu::MsLeft] then addTroop(1, $attacked, $listOfTerritories, $territoryMinTroops[btn[:name]])
-#     when Qo[$attacked, Gosu::MsRight] then decTroop(1, $attacked, $listOfTerritories, $territoryMinTroops[btn[:name]])
-#     when Qo[$attacker, Gosu::MsLeft] then addTroop(1, $attacker, $listOfTerritories, $territoryMinTroops[btn[:name]])
-#     when Qo[$attacker, Gosu::MsRight] then decTroop(1, $attacker, $listOfTerritories, $territoryMinTroops[btn[:name]])
-#     end
-# end
+def click_victoryManagement(btn, typeOfClick)
+    case [btn[:name], typeOfClick]    
+    when Qo[$attacked, Gosu::MsLeft] then getTerritory($attacked, $listOfTerritories)[:troops] < 3 && getTerritory($attacker, $listOfTerritories)[:troops] > 1 ?
+        $decTroop[1, $attacker, $addTroop[1, $attacked, $listOfTerritories, 0], 1] : $listOfTerritories
+
+    when Qo[$attacked, Gosu::MsRight] then getTerritory($attacked, $listOfTerritories)[:troops] > 0 ?
+        $addTroop[1, $attacker, $decTroop[1, $attacked, $listOfTerritories, 0], 1] : $listOfTerritories
+
+    when Qo[$attacker, Gosu::MsLeft] then getTerritory($attacked, $listOfTerritories)[:troops] > 0 ?
+        $addTroop[1, $attacker, $decTroop[1, $attacked, $listOfTerritories, 0], 1] : $listOfTerritories
+    
+    when Qo[$attacker, Gosu::MsRight] then getTerritory($attacked, $listOfTerritories)[:troops] < 3 && getTerritory($attacker, $listOfTerritories)[:troops] > 1 ?
+        $decTroop[1, $attacker, $addTroop[1, $attacked, $listOfTerritories, 0], 1] : $listOfTerritories
+    
+    end
+end
 
 # def CLICK_management(btn)
 #     case [$selected]
@@ -399,23 +407,29 @@ def eventDispatcher(btn, typeOfClick)
         when Qo[Constants::ORGANIZE_PHASE] then enter_organize
         when Qo[Constants::TROOP_PLACEMENT] then enter_troopPlacement
         when Qo[Constants::ATTACK] then enter_attack
+        when Qo[Constants::VICTORY_MANAGEMENT] then enter_victoryManagement
         # when Qo[Constants::MANAGEMENT] then enter_management
         end
     else case [$status]
         when Qo[Constants::ORGANIZE_PHASE] then $listOfTerritories = click_organize(btn, typeOfClick)
         when Qo[Constants::TROOP_PLACEMENT] then $listOfTerritories = click_troopPlacement(btn, typeOfClick)
-        when Qo[Constants::ATTACK] then $attacker == "" ? $attacker = click_attacker(btn, typeOfClick) : ($attacked = click_attacked(btn, typeOfClick);
+        when Qo[Constants::ATTACK] then $attacker == "" ? $attacker = click_attacker(btn, typeOfClick) : (($attacked = click_attacked(btn, typeOfClick);
                                                                                                           if $attacked != ""
                                                                                                             att = getTerritory($attacker, $listOfTerritories)
                                                                                                             defs = getTerritory($attacked, $listOfTerritories)
                                                                                                             resultAtt = att[:troops]
                                                                                                             resultDefs = defs[:troops]
-                                                                                                            battle(att[:troops], defs[:troops]).map{|bat| bat ? $listOfTerritories = $decTroop[1, $attacked, $listOfTerritories, -1]
+                                                                                                            battle(att[:troops], defs[:troops]).map{|bat| puts bat; bat ? $listOfTerritories = $decTroop[1, $attacked, $listOfTerritories, -1]
                                                                                                                                                                 : $listOfTerritories = $decTroop[1, $attacker, $listOfTerritories, 1]}
-                                                                                                            # newAtt = Territory.new(att[:name], resultAtt, att[:playerId], att[:x], att[:y])
-                                                                                                            # newDefs = Territory.new(defs[:name], resultDefs, defs[:playerId], defs[:x], defs[:y])
-                                                                                                            # $listOfTerritories = updateTerritories(newAtt, updateTerritories(newDefs, $listOfTerritories))
-                                                                                                          end)
+                                                                                                            end)
+                                                            attackedTerr = getTerritory($attacked, $listOfTerritories);
+                                                            if attackedTerr[:troops] == 0 then ($listOfTerritories = updateTerritories(Territory.new($attacked, $turnPlayer, 0, attackedTerr[:x], attackedTerr[:y]), $listOfTerritories);
+                                                                                              $territoryButtons = paintTroop(attackedTerr, Constants::MOVE_IMAGE, $territoryButtons);
+                                                                                              puts "VICTORY!!"
+                                                                                              $status = Constants::VICTORY_MANAGEMENT)
+                                                            end)
+        when Qo[Constants::VICTORY_MANAGEMENT] then $listOfTerritories =  click_victoryManagement(btn, typeOfClick)
+
         end
     end
 end
@@ -447,6 +461,12 @@ eventDispatcher(Button.new("TERRITORY", "China", nil, nil), Gosu::MsLeft)
 puts $attacker
 eventDispatcher(Button.new("TERRITORY", "Mongolia", nil, nil), Gosu::MsLeft)
 puts $attacked
+puts getTerritory("China", $listOfTerritories)[:troops]
+puts getTerritory("Mongolia", $listOfTerritories)[:troops]
+eventDispatcher(nil, "ENTER")
+
+90.times do eventDispatcher(Button.new("TERRITORY", "Mongolia", nil, nil), Gosu::MsLeft);end
+
 puts getTerritory("China", $listOfTerritories)[:troops]
 puts getTerritory("Mongolia", $listOfTerritories)[:troops]
 eventDispatcher(nil, "ENTER")
