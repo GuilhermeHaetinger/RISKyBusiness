@@ -10,7 +10,7 @@ Territory = Struct.new(:name, :playerId, :troops, :x, :y)
 Button = Struct.new(:type, :name, :image, :x, :y)
 Objective = Struct.new(:description, :function)
 
-turnPlayer = nil
+$turnPlayer = nil
 $listOfPlayers = Array.new
 $listOfTerritories = Array.new
 $mapOfAdjacence = Hash.new
@@ -31,8 +31,17 @@ $selected = ""
 $territoryMinTroops = Hash.new
 $territoryMovedTroops = Hash.new
 
+$text = nil
+$subtext = nil
+
 def head(list) list.to_a[0];end
 def tail(list) list.to_a[1..-1];end
+
+def initTexts
+    h1 = Gosu::Font.new(45)
+    p = Gosu::Font.new(30)
+    [h1, p]
+end
 
 def initMenuButtons
     menuButtons = Array.new
@@ -103,6 +112,7 @@ end
 def initMinTroops(listOfTerritories)
     territoryMinTroops = Hash.new
     listOfTerritories.map {|x| territoryMinTroops[x[:name]] = 1}
+    territoryMinTroops
 end
 
 def initMapOfAdjacence
@@ -163,15 +173,15 @@ def initContinents
     continents
 end
 
-def initObjectives(continents, listOfTerritories)
-    territories32 = lambda {|id| (listOfTerritories.select{|x| x[:playerId] == id}).length >= 32}
+def initObjectives(continents)
+    territories32 = lambda {|id, listOfTerritories| (listOfTerritories.select{|x| x[:playerId] == id}).length >= 32}
 
-    asiaANDafrica = lambda {|id| checkContinents[["Asia", "Africa"], id]}
-    oceaniaANDeuropeANDafrica = lambda {|id| checkContinents[["Oceania", "Europe", "Africa"], id]}
-    asiaANDeurope = lambda {|id| checkContinents[["Asia", "Europe"], id]}
-    northAmericaANDafrica = lambda {|id| checkContinents[["North America", "Africa"], id]}
-    southAmericaANDnorthAmericaANDoceania = lambda {|id| checkContinents[["South America", "North America", "Oceania"], id]}
-    asiaANDsouthAmerica = lambda {|id| checkContinents[["Asia", "South America"], id]}
+    asiaANDafrica = lambda {|id, listOfTerritories| checkContinents(["Asia", "Africa"], id, continents, listOfTerritories)}
+    oceaniaANDeuropeANDafrica = lambda {|id, listOfTerritories| checkContinents(["Oceania", "Europe", "Africa"], id, continents, listOfTerritories)}
+    asiaANDeurope = lambda {|id, listOfTerritories| checkContinents(["Asia", "Europe"], id, continents, listOfTerritories)}
+    northAmericaANDafrica = lambda {|id, listOfTerritories| checkContinents(["North America", "Africa"], id, continents, listOfTerritories)}
+    southAmericaANDnorthAmericaANDoceania = lambda {|id, listOfTerritories| checkContinents(["South America", "North America", "Oceania"], id, continents, listOfTerritories)}
+    asiaANDsouthAmerica = lambda {|id, listOfTerritories| checkContinents(["Asia", "South America"], id, continents, listOfTerritories)}
 
     objectives = Array.new
     objectives.push(Objective.new("32 Territories", territories32))
@@ -187,22 +197,27 @@ end
 def startGame
     listOfTerritories = splitTerritories(initTerritoryList)
     mapOfAdjacence = initMapOfAdjacence
-    territoryMinTroops = initMinTroops
+    territoryMinTroops = initMinTroops(listOfTerritories)
     territoryButtons = initTerritoryButtons(listOfTerritories)
-    objective1, objective2 = get2RandomObjectives(initObjectives)
+    continents = initContinents
+    objective1, objective2 = get2RandomObjectives(initObjectives(continents))
     player1 = Player.new(1, objective1)
     player2 = Player.new(2, objective2)
     listOfPlayers = [player1, player2]
     turnPlayer = 1
     status = Constants::SHOWING_OBJECTIVES
+    h1, p = initTexts
     $listOfTerritories = listOfTerritories
     $mapOfAdjacence = mapOfAdjacence
     $territoryMinTroops = territoryMinTroops
     $territoryButtons = territoryButtons
+    $continents = continents
     $listOfPlayers = listOfPlayers
     $turnPlayer = turnPlayer
     $status = status
-    puts "player 2 close your eyes"
+    $h1 = h1
+    $p = p
+    $text =  "player 2 close your eyes"
 end
 
 def changeTurn(id)
@@ -223,9 +238,9 @@ $getAdjacentEnemies = method(:getSpecificAdjacentTerritories).to_proc.curry["!="
 $addTroop = method(:changeTroops).to_proc.curry["+"]
 $decTroop = method(:changeTroops).to_proc.curry["-"]
 
-def selectAsAttacker(territoryName, turnPlayer, territories, buttons, mapOfAdjance, listOfTerritories)
+def selectAsAttacker(territoryName, turnPlayer, territories, buttons, mapOfAdjacence)
     territory = getTerritory(territoryName, territories)
-    territory[:playerId] == turnPlayer && territory[:troops] > 1 ? ([paintTroops(Constants::ATTACK_IMAGE, ($getAdjacentEnemies[territory, mapOfAdjacence, listOfTerritories]), buttons),territoryName]) : [buttons, ""]
+    territory[:playerId] == turnPlayer && territory[:troops] > 1 ? ([paintTroops(Constants::ATTACK_IMAGE, ($getAdjacentEnemies[territory, mapOfAdjacence, territories]), buttons),territoryName]) : [buttons, ""]
 end
 
 def selectAsSelected(territoryName, turnPlayer, territories, buttons, mapOfAdjance, listOfTerritories)
@@ -233,9 +248,9 @@ def selectAsSelected(territoryName, turnPlayer, territories, buttons, mapOfAdjan
     territory[:playerId] == turnPlayer ? ([paintTroops(Constants::MOVE_IMAGE, ($getAdjacentAllies[territory, mapOfAdjacence, listOfTerritories]), buttons),territoryName]) : [buttons, ""]
 end
 
-def selectAsAttacked(territoryName, turnPlayer, attacker, territories, mapOfAdjance, listOfTerritories)
+def selectAsAttacked(territoryName, turnPlayer, attacker, territories, mapOfAdjacence)
     territory = getTerritory(territoryName, territories)
-    territory[:playerId] != turnPlayer && $getAdjacentEnemies[attacker, mapOfAdjacence, listOfTerritories].include?(territoryName) ? territoryName : ""
+    territory[:playerId] != turnPlayer && $getAdjacentEnemies[attacker, mapOfAdjacence, territories].include?(territoryName) ? territoryName : ""
 end
 
 def updateTroops(lisOfTerritories)
@@ -248,18 +263,18 @@ def numOfTerritories(id, territories)
     territories.select{|x| x[:playerId] == id}.length
 end
 
-def checkContinents(contLs, id)
-    continents[head(contLs)].all?{|x| getTerritory(x, listOfTerritories)[:playerId] == id} && (contLs.length == 1 ? true : checkContinents[tail(contLs), id])
+def checkContinents(contLs, id, continents, listOfTerritories)
+    continents[head(contLs)].all?{|x| getTerritory(x, listOfTerritories)[:playerId] == id} && (contLs.length == 1 ? true : checkContinents(tail(contLs), id, continents, listOfTerritories))
 end
 
-def getTroopsAvailable(id, territories)
+def getTroopsAvailable(id, territories, continents)
     numOfTroops = numOfTerritories(id, territories) / 2
-    numOfTroops += checkContinents(["South America"], id) ? 2 : 0
-    numOfTroops += checkContinents(["North America"], id) ? 5 : 0
-    numOfTroops += checkContinents(["Europe"], id) ? 5 : 0
-    numOfTroops += checkContinents(["Oceania"], id) ? 2 : 0
-    numOfTroops += checkContinents(["Africa"], id) ? 4 : 0
-    numOfTroops += checkContinents(["Asia"], id) ? 7 : 0
+    numOfTroops += checkContinents(["South America"], id, continents, territories) ? 2 : 0
+    numOfTroops += checkContinents(["North America"], id, continents, territories) ? 5 : 0
+    numOfTroops += checkContinents(["Europe"], id, continents, territories) ? 5 : 0
+    numOfTroops += checkContinents(["Oceania"], id, continents, territories) ? 2 : 0
+    numOfTroops += checkContinents(["Africa"], id, continents, territories) ? 4 : 0
+    numOfTroops += checkContinents(["Asia"], id, continents, territories) ? 7 : 0
     numOfTroops
 end
 
@@ -337,244 +352,269 @@ end
 # ENTER FUNCTIONALITIES
 ##################
 
-def enter_showingObjectives(listOfTerritories, listOfPlayers, shownObj1, shownObj2, turnPlayer, availableTroops)
+def enter_showingObjectives(listOfTerritories, listOfPlayers, shownObj1, shownObj2, turnPlayer, availableTroops, continents)
     shownObj1_ = shownObj1_
     shownObj2_ = shownObj2
     turnPlayer_ = turnPlayer
     availableTroops_ = availableTroops
     status_ = Constants::SHOWING_OBJECTIVES
+    text = ""
 
     if turnPlayer == 1
         if shownObj1
             turnPlayer_ = 2
-            puts "player1 close your eyes"
+            text =  "player 1 close your eyes"
         else
-            puts listOfPlayers[0][:objective][:description]
+            text = listOfPlayers[0][:objective][:description]
             shownObj1_ = true
         end
     elsif !shownObj2
-        puts listOfPlayers[1][:objective][:description]
+        text = listOfPlayers[1][:objective][:description]
         shownObj2_ = true
     else
         status_ = Constants::ORGANIZE_PHASE
         turnPlayer_ = 1
-        availableTroops_ = getTroopsAvailable(1, listOfTerritories)
+        availableTroops_ = getTroopsAvailable(1, listOfTerritories, continents)
     end
 
-    [shownObj1_, shownObj2_, turnPlayer_, availableTroops_, status_]
+    [text, shownObj1_, shownObj2_, turnPlayer_, availableTroops_, status_]
 end
 
-def enter_organize(listOfTerritories, turnPlayer, availableTroops)
+def enter_organize(listOfTerritories, turnPlayer, availableTroops, continents, minTroops)
     turnPlayer_ = turnPlayer
     availableTroops_ = availableTroops
+    minTroops_ = minTroops
     status_ = Constants::ORGANIZE_PHASE
+    text = ""
 
     if turnPlayer == 1
         if availableTroops != 0
-            puts "MUST EMPTY TROOPS PLAYER 1"
+            text = "MUST EMPTY TROOPS PLAYER 1"
         else
             turnPlayer_ = 2
-            availableTroops_ = getTroopsAvailable(2, listOfTerritories)
+            availableTroops_ = getTroopsAvailable(2, listOfTerritories, continents)
         end
     else
         if availableTroops != 0
-            puts "MUST EMPTY TROOPS PLAYER 2"
+            text = "MUST EMPTY TROOPS PLAYER 2"
         else
-            updateTroops(listOfTerritories)
+            minTroops_ = updateTroops(listOfTerritories)
             status_ = Constants::TROOP_PLACEMENT
             turnPlayer_ = 1
-            availableTroops_ = getTroopsAvailable(1, listOfTerritories)
+            availableTroops_ = getTroopsAvailable(1, listOfTerritories, continents)
         end
     end
 
-    [turnPlayer_, availableTroops_, status_]
+    [text, turnPlayer_, availableTroops_, status_, minTroops_]
 end
 
 def enter_troopPlacement(turnPlayer, availableTroops)
     status_ = Constants::TROOP_PLACEMENT
+    text = ""
     if availableTroops != 0
-        puts "MUST EMPTY TROOPS FOR TROOP PLACEMENT PLAYER #{turnPlayer}"
+        text = "MUST EMPTY TROOPS PLAYER #{turnPlayer}"
     else
-        puts "PREPARE TO ATTACK"
+        text = "PREPARE TO ATTACK"
         status_ = Constants::ATTACK
     end
-    status_
+    [text, status_]
 end
 
 def enter_attack(listOfTerritories, territoryButtons, turnPlayer, listOfPlayers)
-    listOfTerritories_ = updateTroops(listOfTerritories)
+    minTroops_ = updateTroops(listOfTerritories)
     territoryButtons_ = resetTroopColors(listOfTerritories, territoryButtons)
-    territoryMovedTroops_ = resetMovedTroops(listOfTerritories_)
+    territoryMovedTroops_ = resetMovedTroops(listOfTerritories)
     status_ = Constants::ATTACK
-    if listOfPlayers[turnPlayer-1][:objective][:function].call(turnPlayer) then
-        puts "PLAYER #{turnPlayer} WON!!"
-        exit()
-    end
-    puts "MANAGE YOUR TROOPS PLAYER #{turnPlayer}"
+    text = ""
+    text = "MANAGE YOUR TROOPS PLAYER #{turnPlayer}"
     status_ = Constants::MANAGEMENT
+    if listOfPlayers[turnPlayer-1][:objective][:function].call(turnPlayer, listOfTerritories) then
+        text = "PLAYER #{turnPlayer} WON!!"
+        status_ = Constants::GAME_FINISHED
+    end
 
-    [listOfTerritories_, territoryButtons_, territoryMovedTroops_, status_]
+    [text, minTroops_, territoryButtons_, territoryMovedTroops_, status_]
 end
 
 def enter_victoryManagement(listOfTerritories, attacked, attacker, territoryButtons)
     attacker_ = attacker
     territoryButtons_ = territoryButtons
     status_ = Constants::VICTORY_MANAGEMENT
+    text = ""
     if getTerritory(attacked, listOfTerritories)[:troops] == 0
-        puts "AT LEAST ONE TROOP"
+        text = "AT LEAST ONE TROOP"
     else
         attacker_ = ""
         territoryButtons_ = resetTroopColors(listOfTerritories, territoryButtons)
         status_ = Constants::ATTACK
     end
 
-    [attacker_, territoryButtons_, status_]
+    [text, attacker_, territoryButtons_, status_]
 end
 
-def enter_management(listOfTerritories, turnPlayer, availableTroops)
-    listOfTerritories_ = updateTroops(listOfTerritories)
+def enter_management(listOfTerritories, turnPlayer, availableTroops, continents)
+    minTroops_ = updateTroops(listOfTerritories)
     status_ = Constants::TROOP_PLACEMENT
     turnPlayer_ = changeTurn(turnPlayer)
-    availableTroops_ = getTroopsAvailable(turnPlayer, listOfTerritories)
-    puts "PLAYER #{$turnPlayer} TURN"
+    availableTroops_ = getTroopsAvailable(turnPlayer_, listOfTerritories, continents)
+    text = "PLAYER #{turnPlayer_} TURN"
 
-    [listOfTerritories_, status_, turnPlayer_, availableTroops_]
+    [text, minTroops_, status_, turnPlayer_, availableTroops_]
 end
 
 ######################## 
 # CLICK FUNCTIONALITIES
 ########################
 
-def click_organize(btn, typeOfClick)
+def click_organize(btn, typeOfClick, availableTroops, listOfTerritories, territoryMinTroops)
     case [btn[:type], typeOfClick]
-    when Qo["TERRITORY", Gosu::MsLeft] then $availableTroops > 0 ? ($availableTroops -= 1; $addTroop[1, btn[:name], $listOfTerritories, $territoryMinTroops[btn[:name]]]) : $listOfTerritories
-    when Qo["TERRITORY", Gosu::MsRight] then buffer = getTerritory(btn[:name], $listOfTerritories)[:troops];
-                                             newList = $decTroop[1, btn[:name], $listOfTerritories, $territoryMinTroops[btn[:name]]];
-                                             if buffer > getTerritory(btn[:name], newList)[:troops] then $availableTroops += 1;end;
-                                             newList
-    else $listOfTerritories
+    when Qo["TERRITORY", Gosu::MsLeft] then availableTroops > 0 ? 
+        (availableTroops -= 1;
+         [availableTroops, $addTroop[1, btn[:name],
+          listOfTerritories,
+          territoryMinTroops[btn[:name]]]]) : 
+        [availableTroops, listOfTerritories]
+    when Qo["TERRITORY", Gosu::MsRight] then buffer = getTerritory(btn[:name], listOfTerritories)[:troops];
+                                             newList = $decTroop[1, btn[:name], listOfTerritories, territoryMinTroops[btn[:name]]];
+                                             if buffer > getTerritory(btn[:name], newList)[:troops] then availableTroops += 1;end;
+                                             [availableTroops, newList]
+    else [availableTroops, listOfTerritories]
     end
 end
 
-def click_troopPlacement(btn, typeOfClick)
-    case [btn[:type], typeOfClick]
-    when Qo["TERRITORY", Gosu::MsLeft] then $availableTroops > 0 ? ($availableTroops -= 1; $addTroop[1, btn[:name], $listOfTerritories, $territoryMinTroops[btn[:name]]]) : $listOfTerritories
-    when Qo["TERRITORY", Gosu::MsRight] then buffer = getTerritory(btn[:name], $listOfTerritories)[:troops];
-                                             newList = $decTroop[1, btn[:name], $listOfTerritories, $territoryMinTroops[btn[:name]]];
-                                             if buffer > getTerritory(btn[:name], newList)[:troops] then $availableTroops += 1;end;
-                                             newList
-    else $listOfTerritories
-    end
-end
-
-def click_attacker(btn, typeOfClick)
+def click_attacker(btn, typeOfClick, turnPlayer, listOfTerritories, territoryButtons, mapOfAdjacence)
     attacker = ""
     case[typeOfClick]
-    when Qo[Gosu::MsLeft] then selectAsAttacker(btn[:name], $turnPlayer, $listOfTerritories, $territoryButtons)
-    else [$territoryButtons, attacker]
+    when Qo[Gosu::MsLeft] then selectAsAttacker(btn[:name], turnPlayer, listOfTerritories, territoryButtons, mapOfAdjacence)
+    else [territoryButtons, attacker]
     end
 end
 
-def click_attacked(btn, typeOfClick)
+def click_attacked(btn, typeOfClick, turnPlayer, attacker, listOfTerritories, mapOfAdjacence)
     attacked = ""
     case [typeOfClick]
-    when Qo[Gosu::MsLeft] then selectAsAttacked(btn[:name], $turnPlayer, getTerritory($attacker, $listOfTerritories), $listOfTerritories)
+    when Qo[Gosu::MsLeft] then selectAsAttacked(btn[:name], turnPlayer, getTerritory(attacker, listOfTerritories), listOfTerritories, mapOfAdjacence)
     else attacked
     end
 end
 
-def click_victoryManagement(btn, typeOfClick)
+def click_victoryManagement(btn, typeOfClick, attacked, attacker, listOfTerritories)
     case [btn[:name], typeOfClick]    
-    when Qo[$attacked, Gosu::MsLeft] then getTerritory($attacked, $listOfTerritories)[:troops] < 3 && getTerritory($attacker, $listOfTerritories)[:troops] > 1 ?
-        $decTroop[1, $attacker, $addTroop[1, $attacked, $listOfTerritories, 0], 1] : $listOfTerritories
+    when Qo[attacked, Gosu::MsLeft] then getTerritory(attacked, listOfTerritories)[:troops] < 3 && getTerritory(attacker, listOfTerritories)[:troops] > 1 ?
+        $decTroop[1, attacker, $addTroop[1, attacked, listOfTerritories, 0], 1] : listOfTerritories
 
-    when Qo[$attacked, Gosu::MsRight] then getTerritory($attacked, $listOfTerritories)[:troops] > 0 ?
-        $addTroop[1, $attacker, $decTroop[1, $attacked, $listOfTerritories, 0], 1] : $listOfTerritories
+    when Qo[attacked, Gosu::MsRight] then getTerritory(attacked, listOfTerritories)[:troops] > 0 ?
+        $addTroop[1, attacker, $decTroop[1, attacked, listOfTerritories, 0], 1] : listOfTerritories
 
-    when Qo[$attacker, Gosu::MsLeft] then getTerritory($attacked, $listOfTerritories)[:troops] > 0 ?
-        $addTroop[1, $attacker, $decTroop[1, $attacked, $listOfTerritories, 0], 1] : $listOfTerritories
+    when Qo[attacker, Gosu::MsLeft] then getTerritory(attacked, listOfTerritories)[:troops] > 0 ?
+        $addTroop[1, attacker, $decTroop[1, attacked, listOfTerritories, 0], 1] : listOfTerritories
     
-    when Qo[$attacker, Gosu::MsRight] then getTerritory($attacked, $listOfTerritories)[:troops] < 3 && getTerritory($attacker, $listOfTerritories)[:troops] > 1 ?
-        $decTroop[1, $attacker, $addTroop[1, $attacked, $listOfTerritories, 0], 1] : $listOfTerritories
-    
+    when Qo[attacker, Gosu::MsRight] then getTerritory(attacked, listOfTerritories)[:troops] < 3 && getTerritory(attacker, listOfTerritories)[:troops] > 1 ?
+        $decTroop[1, attacker, $addTroop[1, attacked, listOfTerritories, 0], 1] : listOfTerritories
+    else listOfTerritories
     end
 end
 
-def click_management(btn, buttons)
-    case [$selected]
-    when Qo[""] then territory = getTerritory(btn[:name], $listOfTerritories); ($territoryMovedTroops[btn[:name]] < $territoryMinTroops[btn[:name]] && territory[:troops] > 1) ? 
-                                                                                    ($selected = btn[:name];
-                                                                                     [$territoryMovedTroops[$selected],
-                                                                                     $listOfTerritories, 
-                                                                                     paintTroops(Constants::MOVE_IMAGE, ($getAdjacentAllies[territory, $mapOfAdjacence, $listOfTerritories]), buttons)
+def click_management(btn, buttons, selected, listOfTerritories, territoryMovedTroops, territoryMinTroops, mapOfAdjacence)
+    case [selected]
+    when Qo[""] then territory = getTerritory(btn[:name], listOfTerritories); (territoryMovedTroops[btn[:name]] < territoryMinTroops[btn[:name]] && territory[:troops] > 1) ? 
+                                                                                    (selected = btn[:name];
+                                                                                     [selected, 
+                                                                                      territoryMovedTroops[selected],
+                                                                                      listOfTerritories, 
+                                                                                      paintTroops(Constants::MOVE_IMAGE, ($getAdjacentAllies[territory, mapOfAdjacence, listOfTerritories]), buttons)
                                                                                      ]) :
-                                                                                     [$territoryMovedTroops[$selected], $listOfTerritories, $territoryButtons]
-    when Qo[Any] then transferTroops($selected, btn[:name], $territoryMinTroops[$selected], $territoryMovedTroops[$selected], $listOfTerritories, $territoryButtons)
+                                                                                     [selected, territoryMovedTroops[selected], listOfTerritories, buttons]
+    when Qo[Any] then [selected].concat(transferTroops(selected, btn[:name], territoryMinTroops[selected], territoryMovedTroops[selected], listOfTerritories, buttons))
     end
 end
 
 ################
 
+def runAttack(listOfTerritories, territoryButtons, attacker, attacked, status, turnPlayer, btn)
+    attacker_ = attacker
+    listOfTerritories_ = listOfTerritories
+    territoryButtons_ = territoryButtons
+    status_ = status
+    if attacked != "" && btn[:name] == attacked
+        att = getTerritory(attacker, listOfTerritories)
+        defs = getTerritory(attacked, listOfTerritories)
+        resultAtt = att[:troops]
+        resultDefs = defs[:troops]
+        battle(att[:troops], defs[:troops]).map{|bat| bat ? listOfTerritories_ = $decTroop[1, attacked, listOfTerritories_, -1]
+                                                            : listOfTerritories_ = $decTroop[1, attacker, listOfTerritories_, 1]}
+        attackedTerr = getTerritory(attacked, listOfTerritories_)
+        if attackedTerr[:troops] == 0 then 
+            listOfTerritories_ = updateTerritories(Territory.new(attacked, turnPlayer, 0, attackedTerr[:x], attackedTerr[:y]), listOfTerritories);
+            territoryButtons_ = resetTroopColors(listOfTerritories, territoryButtons)
+            territoryButtons_ = paintTroop(Constants::MOVE_IMAGE, attacked, territoryButtons);
+            puts "VICTORY!!"
+            status_ = Constants::VICTORY_MANAGEMENT
+        else
+            territoryButtons_ = resetTroopColors(listOfTerritories, territoryButtons)
+            attacker_ = ""
+        end 
+    else
+        territoryButtons_ = resetTroopColors(listOfTerritories, territoryButtons)
+        attacker_ = ""
+    end
+    [attacker_, listOfTerritories_, territoryButtons_, status_]
+end
+
+def runManagement(listOfTerritories, turnPlayer, selected, territoryMovedTroops, territoryButtons, territoryMinTroops, mapOfAdjacence, btn)
+    listOfTerritories_ = listOfTerritories
+    selected_ = selected
+    territoryButtons_ = territoryButtons
+    territoryMovedTroops_ = territoryMovedTroops
+    if getTerritory(btn[:name], listOfTerritories)[:playerId] == turnPlayer then
+        if selected != btn[:name] then
+            prevSelected = selected
+            selected_, moved, ls, btns = click_management(btn, territoryButtons, selected, listOfTerritories, territoryMovedTroops, territoryMinTroops, mapOfAdjacence)
+            listOfTerritories_ = ls; 
+            territoryMovedTroops_[selected] = moved
+            if prevSelected != ""
+                selected_ = ""
+            end
+            territoryButtons_ = btns
+        else
+            selected_ = ""
+            territoryButtons_ = resetTroopColors(listOfTerritories, territoryButtons)
+        end
+    end
+    [listOfTerritories_, selected_, territoryButtons_, territoryMovedTroops_]
+end
 
 def eventDispatcher(btn, typeOfClick)
     case [typeOfClick]
-    when Qo[Gosu::KB_RETURN] then case [$status]
-        when Qo[Constants::SHOWING_OBJECTIVES] then enter_showingObjectives
-        when Qo[Constants::ORGANIZE_PHASE] then enter_organize
-        when Qo[Constants::TROOP_PLACEMENT] then enter_troopPlacement
-        when Qo[Constants::ATTACK] then enter_attack
-        when Qo[Constants::VICTORY_MANAGEMENT] then enter_victoryManagement
-         when Qo[Constants::MANAGEMENT] then enter_management
+    when Qo[Gosu::KB_RETURN] then
+        case [$status]
+        when Qo[Constants::SHOWING_OBJECTIVES] then 
+            $text, $shownObj1, $shownObj2, $turnPlayer, $availableTroops, $status = enter_showingObjectives($listOfTerritories, $listOfPlayers, $shownObj1, $shownObj2, $turnPlayer, $availableTroops, $continents)
+        when Qo[Constants::ORGANIZE_PHASE] then
+            $text, $turnPlayer, $availableTroops, $status, $territoryMinTroops = enter_organize($listOfTerritories, $turnPlayer, $availableTroops, $continents, $territoryMinTroops)
+        when Qo[Constants::TROOP_PLACEMENT] then
+            $text, $status = enter_troopPlacement($turnPlayer, $availableTroops)
+        when Qo[Constants::ATTACK] then
+            $text, $territoryMinTroops, $territoryButtons, $territoryMovedTroops, $status = enter_attack($listOfTerritories, $territoryButtons, $turnPlayer, $listOfPlayers)
+        when Qo[Constants::VICTORY_MANAGEMENT] then
+            $text, $attacker, $territoryButtons, $status = enter_victoryManagement($listOfTerritories, $attacked, $attacker, $territoryButtons)
+         when Qo[Constants::MANAGEMENT] then 
+            $text, $territoryMinTroops, $status, $turnPlayer, $availableTroops = enter_management($listOfTerritories, $turnPlayer, $availableTroops, $continents)
         end
     else case [$status]
-        when Qo[Constants::ORGANIZE_PHASE] then $listOfTerritories = getTerritory(btn[:name], $listOfTerritories)[:playerId] == $turnPlayer ? 
-                                                                        click_organize(btn, typeOfClick) :
-                                                                        $listOfTerritories
-        when Qo[Constants::TROOP_PLACEMENT] then $listOfTerritories = getTerritory(btn[:name], $listOfTerritories)[:playerId] == $turnPlayer ?
-                                                                        click_troopPlacement(btn, typeOfClick) :
-                                                                        $listOfTerritories
-        when Qo[Constants::ATTACK] then $attacker == "" ? ($territoryButtons, $attacker = click_attacker(btn, typeOfClick)) : 
-                                                          ($attacked = click_attacked(btn, typeOfClick);
-                                                            if $attacked != ""
-                                                                att = getTerritory($attacker, $listOfTerritories)
-                                                                defs = getTerritory($attacked, $listOfTerritories)
-                                                                resultAtt = att[:troops]
-                                                                resultDefs = defs[:troops]
-                                                                battle(att[:troops], defs[:troops]).map{|bat| bat ? $listOfTerritories = $decTroop[1, $attacked, $listOfTerritories, -1]
-                                                                                                                    : $listOfTerritories = $decTroop[1, $attacker, $listOfTerritories, 1]}
-                                                                attackedTerr = getTerritory($attacked, $listOfTerritories)
-                                                                if attackedTerr[:troops] == 0 then 
-                                                                    $listOfTerritories = updateTerritories(Territory.new($attacked, $turnPlayer, 0, attackedTerr[:x], attackedTerr[:y]), $listOfTerritories);
-                                                                    $territoryButtons = resetTroopColors($listOfTerritories, $territoryButtons)
-                                                                    $territoryButtons = paintTroop(Constants::MOVE_IMAGE, $attacked, $territoryButtons);
-                                                                    puts "VICTORY!!"
-                                                                    $status = Constants::VICTORY_MANAGEMENT
-                                                                else
-                                                                    $territoryButtons = resetTroopColors($listOfTerritories, $territoryButtons)
-                                                                    $attacker = ""
-                                                                end 
-                                                            else
-                                                                $territoryButtons = resetTroopColors($listOfTerritories, $territoryButtons)
-                                                                $attacker = ""
-                                                            end
-                                                            )
-        when Qo[Constants::VICTORY_MANAGEMENT] then $listOfTerritories =  click_victoryManagement(btn, typeOfClick)
-        when Qo[Constants::MANAGEMENT] then if getTerritory(btn[:name], $listOfTerritories)[:playerId] == $turnPlayer then
-                                                if $selected != btn[:name] then
-                                                    prevSelected = $selected
-                                                    moved, ls, btns= click_management(btn, $territoryButtons);
-                                                    $listOfTerritories = ls; 
-                                                    $territoryMovedTroops[$selected] = moved
-                                                    if prevSelected != ""
-                                                        $selected = ""
-                                                    end
-                                                    $territoryButtons = btns
-                                                else
-                                                    $selected = ""
-                                                    $territoryButtons = resetTroopColors($listOfTerritories, $territoryButtons)
-                                                end
-                                            end
-
+        when Qo[Constants::ORGANIZE_PHASE] then $availableTroops, $listOfTerritories = getTerritory(btn[:name], $listOfTerritories)[:playerId] == $turnPlayer ? 
+                                                                        click_organize(btn, typeOfClick, $availableTroops, $listOfTerritories, $territoryMinTroops) :
+                                                                        [$availableTroops, $listOfTerritories]
+        when Qo[Constants::TROOP_PLACEMENT] then $availableTroops, $listOfTerritories = getTerritory(btn[:name], $listOfTerritories)[:playerId] == $turnPlayer ?
+                                                                        click_organize(btn, typeOfClick, $availableTroops, $listOfTerritories, $territoryMinTroops) :
+                                                                        [$availableTroops, $listOfTerritories]
+        when Qo[Constants::ATTACK] then $attacker == "" ? 
+            ($territoryButtons, $attacker = click_attacker(btn, typeOfClick, $turnPlayer, $listOfTerritories, $territoryButtons, $mapOfAdjacence)) : 
+            ($attacked = click_attacked(btn, typeOfClick, $turnPlayer, $attacker, $listOfTerritories, $mapOfAdjacence);
+             $attacker, $listOfTerritories, $territoryButtons, $status = runAttack($listOfTerritories, $territoryButtons, $attacker, $attacked, $status, $turnPlayer, btn)
+            )
+        when Qo[Constants::VICTORY_MANAGEMENT] then $listOfTerritories =  click_victoryManagement(btn, typeOfClick, $attacked, $attacker, $listOfTerritories)
+        when Qo[Constants::MANAGEMENT] then $listOfTerritories, $selected, $territoryButtons, $territoryMovedTroops = runManagement($listOfTerritories, $turnPlayer, $selected, $territoryMovedTroops, $territoryButtons, $territoryMinTroops, $mapOfAdjacence, btn)
         end
     end
 end
@@ -585,24 +625,28 @@ def drawCursor(window)
     Gosu::Image.new("../assets/img/cursor.png", false).draw(window.mouse_x, window.mouse_y, ZOrder::CURSOR)
 end
 
-def drawMenu(window)
+def drawMenu(window, menuButtons)
     Gosu::Image.new("../assets/img/main_bg.jpg", tileable: true).draw(0, 0, ZOrder::BACKGROUND)
-    $menuButtons.map{|x| x[:image].draw(x[:x], x[:y], ZOrder::UI)}
+    menuButtons.map{|x| x[:image].draw(x[:x], x[:y], ZOrder::UI)}
 end
 
-def drawGame(window, territories)
-    # @ui.draw()
+def drawGame(window, territories, territoryButtons)
     Gosu::Image.new('../assets/img/MAP.jpg', false).draw(0, 0, ZOrder::BACKGROUND)
     font = Gosu::Font.new(40)
-    $territoryButtons.map{|x| font.draw_text("#{getTerritory(x[:name], territories)[:troops]}", x[:x]+15, x[:y]+15, ZOrder::SPRITES, 1.0, 1.0, Gosu::Color::YELLOW) 
+    territoryButtons.map{|x| font.draw_text("#{getTerritory(x[:name], territories)[:troops]}", x[:x]+15, x[:y]+15, ZOrder::SPRITES, 1.0, 1.0, Gosu::Color::YELLOW) 
                              ; x[:image].draw(x[:x], x[:y], ZOrder::SPRITES)}
 end
 
-def draw_(window, status, territories)
+def draw_(window, status, territories, territoryButtons, menuButtons, text, subtext)
     drawCursor(window)
     case [status]
-    when Qo[Constants::MENU] then drawMenu(window)
-    when Qo[Any] then drawGame(window, territories)
+    when Qo[Constants::MENU] then drawMenu(window, menuButtons)
+    when Qo[Any] then
+        drawGame(window, territories, territoryButtons);
+        h1 = Gosu::Font.new(45)
+        p = Gosu::Font.new(30)
+        h1.draw_text("#{text}", 630, 675, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE);
+        p.draw_text("#{subtext}", 750, 675, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE);
     end
 end
 
@@ -634,13 +678,10 @@ def clicked(window, menuButtons, territoryButtons, id, status)
     end
 end
 
-
-
 class Main < Gosu::Window  
-    def initialize() super(Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT); self.caption = 'RISKyBusiness'; end
-    def draw () draw_(self, $status, $listOfTerritories); end
+    def initialize() super(Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT); self.caption = 'RISKyBusiness'; $menuButtons = initMenuButtons end
+    def draw () draw_(self, $status, $listOfTerritories, $territoryButtons, $menuButtons, $text, $subtext); end
     def button_down (id) clicked(self, $menuButtons, $territoryButtons, id, $status); end
 end
-
 
 Main.new.show
