@@ -12,8 +12,8 @@ class Menu
       "../assets/img/main_bg.jpg", 
       tileable: true
     )
-    add_button (ExitButton.new(window, 590,500))
-    add_button (PlayButton.new(window, 530,440))
+    add_button (ExitButton.new(window, 500,590))
+    add_button (PlayButton.new(window, 500,510))
   end
 
   def add_button (button)
