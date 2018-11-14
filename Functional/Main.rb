@@ -207,17 +207,8 @@ def startGame
     turnPlayer = 1
     status = Constants::SHOWING_OBJECTIVES
     h1, p = initTexts
-    $listOfTerritories = listOfTerritories
-    $mapOfAdjacence = mapOfAdjacence
-    $territoryMinTroops = territoryMinTroops
-    $territoryButtons = territoryButtons
-    $continents = continents
-    $listOfPlayers = listOfPlayers
-    $turnPlayer = turnPlayer
-    $status = status
-    $h1 = h1
-    $p = p
-    $text =  "player 2 close your eyes"
+    text =  "player 2 close your eyes"
+    [text, status, false, false, turnPlayer, listOfTerritories, listOfPlayers, territoryMinTroops, territoryButtons, "", ""]
 end
 
 def changeTurn(id)
@@ -548,7 +539,6 @@ def runAttack(listOfTerritories, territoryButtons, attacker, attacked, status, t
             listOfTerritories_ = updateTerritories(Territory.new(attacked, turnPlayer, 0, attackedTerr[:x], attackedTerr[:y]), listOfTerritories);
             territoryButtons_ = resetTroopColors(listOfTerritories, territoryButtons)
             territoryButtons_ = paintTroop(Constants::MOVE_IMAGE, attacked, territoryButtons);
-            puts "VICTORY!!"
             status_ = Constants::VICTORY_MANAGEMENT
         else
             territoryButtons_ = resetTroopColors(listOfTerritories, territoryButtons)
@@ -584,39 +574,50 @@ def runManagement(listOfTerritories, turnPlayer, selected, territoryMovedTroops,
     [listOfTerritories_, selected_, territoryButtons_, territoryMovedTroops_]
 end
 
-def eventDispatcher(btn, typeOfClick)
-    case [typeOfClick]
-    when Qo[Gosu::KB_RETURN] then
-        case [$status]
-        when Qo[Constants::SHOWING_OBJECTIVES] then 
-            $text, $shownObj1, $shownObj2, $turnPlayer, $availableTroops, $status = enter_showingObjectives($listOfTerritories, $listOfPlayers, $shownObj1, $shownObj2, $turnPlayer, $availableTroops, $continents)
-        when Qo[Constants::ORGANIZE_PHASE] then
-            $text, $turnPlayer, $availableTroops, $status, $territoryMinTroops = enter_organize($listOfTerritories, $turnPlayer, $availableTroops, $continents, $territoryMinTroops)
-        when Qo[Constants::TROOP_PLACEMENT] then
-            $text, $status = enter_troopPlacement($turnPlayer, $availableTroops)
-        when Qo[Constants::ATTACK] then
-            $text, $territoryMinTroops, $territoryButtons, $territoryMovedTroops, $status = enter_attack($listOfTerritories, $territoryButtons, $turnPlayer, $listOfPlayers)
-        when Qo[Constants::VICTORY_MANAGEMENT] then
-            $text, $attacker, $territoryButtons, $status = enter_victoryManagement($listOfTerritories, $attacked, $attacker, $territoryButtons)
-         when Qo[Constants::MANAGEMENT] then 
-            $text, $territoryMinTroops, $status, $turnPlayer, $availableTroops = enter_management($listOfTerritories, $turnPlayer, $availableTroops, $continents)
-        end
-    else case [$status]
-        when Qo[Constants::ORGANIZE_PHASE] then $availableTroops, $listOfTerritories = getTerritory(btn[:name], $listOfTerritories)[:playerId] == $turnPlayer ? 
-                                                                        click_organize(btn, typeOfClick, $availableTroops, $listOfTerritories, $territoryMinTroops) :
-                                                                        [$availableTroops, $listOfTerritories]
-        when Qo[Constants::TROOP_PLACEMENT] then $availableTroops, $listOfTerritories = getTerritory(btn[:name], $listOfTerritories)[:playerId] == $turnPlayer ?
-                                                                        click_organize(btn, typeOfClick, $availableTroops, $listOfTerritories, $territoryMinTroops) :
-                                                                        [$availableTroops, $listOfTerritories]
-        when Qo[Constants::ATTACK] then $attacker == "" ? 
-            ($territoryButtons, $attacker = click_attacker(btn, typeOfClick, $turnPlayer, $listOfTerritories, $territoryButtons, $mapOfAdjacence)) : 
-            ($attacked = click_attacked(btn, typeOfClick, $turnPlayer, $attacker, $listOfTerritories, $mapOfAdjacence);
-             $attacker, $listOfTerritories, $territoryButtons, $status = runAttack($listOfTerritories, $territoryButtons, $attacker, $attacked, $status, $turnPlayer, btn)
+def eventDispatcher(status, shownObj1, shownObj2, turnPlayer, availableTroops, listOfTerritories, listOfPlayers, continents, territoryMinTroops, territoryMovedTroops, territoryButtons, mapOfAdjacence, attacked, attacker, btn, typeOfClick)
+    text = ""
+    status_ = status
+    shownObj1_ = shownObj1
+    shownObj2_ = shownObj2
+    listOfTerritories_ = listOfTerritories
+    listOfPlayers_ = listOfPlayers
+    availableTroops_ = availableTroops
+    territoryMinTroops_ = territoryMinTroops
+    territoryMovedTroops_ = territoryMovedTroops
+    territoryButtons_ = territoryButtons
+    turnPlayer_ = turnPlayer
+    attacker_ = attacker
+    attacked_ = attacked
+    case [typeOfClick, status]
+        when Qo[Gosu::KB_RETURN, Constants::SHOWING_OBJECTIVES] then 
+            text, shownObj1_, shownObj2_, turnPlayer_, availableTroops_, status_ = enter_showingObjectives(listOfTerritories, listOfPlayers, shownObj1, shownObj2, turnPlayer, availableTroops, continents)
+        when Qo[Gosu::KB_RETURN, Constants::ORGANIZE_PHASE] then
+            text, turnPlayer_, availableTroops_, status_, territoryMinTroops_ = enter_organize(listOfTerritories, turnPlayer, availableTroops, continents, territoryMinTroops)
+        when Qo[Gosu::KB_RETURN, Constants::TROOP_PLACEMENT] then
+            text, status_ = enter_troopPlacement(turnPlayer, availableTroops)
+        when Qo[Gosu::KB_RETURN, Constants::ATTACK] then
+            text, territoryMinTroops_, territoryButtons_, territoryMovedTroops_, status_ = enter_attack(listOfTerritories, territoryButtons, turnPlayer, listOfPlayers)
+        when Qo[Gosu::KB_RETURN, Constants::VICTORY_MANAGEMENT] then
+            text, attacker_, territoryButtons_, status_ = enter_victoryManagement(listOfTerritories, attacked, attacker, territoryButtons)
+        when Qo[Gosu::KB_RETURN, Constants::MANAGEMENT] then 
+            text, territoryMinTroops_, status_, turnPlayer_, availableTroops_ = enter_management(listOfTerritories, turnPlayer, availableTroops, continents)
+        
+        when Qo[Any, Constants::ORGANIZE_PHASE] then availableTroops_, listOfTerritories_ = getTerritory(btn[:name], listOfTerritories)[:playerId] == turnPlayer ? 
+                                                                        click_organize(btn, typeOfClick, availableTroops, listOfTerritories, territoryMinTroops) :
+                                                                        [availableTroops, listOfTerritories]
+        when Qo[Any, Constants::TROOP_PLACEMENT] then availableTroops_, listOfTerritories_ = getTerritory(btn[:name], listOfTerritories)[:playerId] == turnPlayer ?
+                                                                        click_organize(btn, typeOfClick, availableTroops, listOfTerritories, territoryMinTroops) :
+                                                                        [availableTroops, listOfTerritories]
+        when Qo[Any, Constants::ATTACK] then attacker == "" ? 
+            (territoryButtons_, attacker_ = click_attacker(btn, typeOfClick, turnPlayer, listOfTerritories, territoryButtons, mapOfAdjacence)) : 
+            (attacked_ = click_attacked(btn, typeOfClick, turnPlayer, attacker, listOfTerritories, mapOfAdjacence);
+                attacker_, listOfTerritories_, territoryButtons_, status_ = runAttack(listOfTerritories, territoryButtons, attacker, attacked_, status, turnPlayer, btn)
             )
-        when Qo[Constants::VICTORY_MANAGEMENT] then $listOfTerritories =  click_victoryManagement(btn, typeOfClick, $attacked, $attacker, $listOfTerritories)
-        when Qo[Constants::MANAGEMENT] then $listOfTerritories, $selected, $territoryButtons, $territoryMovedTroops = runManagement($listOfTerritories, $turnPlayer, $selected, $territoryMovedTroops, $territoryButtons, $territoryMinTroops, $mapOfAdjacence, btn)
-        end
+        when Qo[Any, Constants::VICTORY_MANAGEMENT] then listOfTerritories_ =  click_victoryManagement(btn, typeOfClick, attacked, attacker, listOfTerritories)
+        when Qo[Any, Constants::MANAGEMENT] then listOfTerritories_, selected_, territoryButtons_, territoryMovedTroops_ = runManagement(listOfTerritories, turnPlayer, selected, territoryMovedTroops, territoryButtons, territoryMinTroops, mapOfAdjacence, btn)
+    
     end
+    [text, status_, shownObj1_, shownObj2_, turnPlayer_, listOfTerritories_, listOfPlayers_, territoryMinTroops_, territoryButtons_, attacked_, attacker_]
 end
 
 ## UI
@@ -661,27 +662,31 @@ def isMouseClick(id)
     (id == Gosu::MsLeft || id == Gosu::MsRight) ? true : false
 end
 
-def clicked(window, menuButtons, territoryButtons, id, status)
+def clicked(window, id, menuButtons, status, shownObj1, shownObj2, turnPlayer, availableTroops, listOfTerritories, listOfPlayers, continents, territoryMinTroops, territoryMovedTroops, territoryButtons, mapOfAdjacence, attacked, attacker)
     if isMouseClick(id) then
         if status == Constants::MENU then
             if isMouseHovering(menuButtons[0], window) then
-                startGame
-            elsif isMouseHovering(menuButtons[1], window) then
+                return startGame
+        elsif isMouseHovering(menuButtons[1], window) then
                 exit()
             end
         else
             filter = territoryButtons.select{|x| isMouseHovering(x, window)}
-            filter == [] ? nil : eventDispatcher(filter[0], id)
+            filter == [] ? nil : (return eventDispatcher(status, shownObj1, shownObj2, turnPlayer, availableTroops, listOfTerritories, listOfPlayers, continents, territoryMinTroops, territoryMovedTroops, territoryButtons, mapOfAdjacence, attacked, attacker, filter[0], id))
         end
     elsif id == Gosu::KB_RETURN
-        eventDispatcher(nil, id)
+        return eventDispatcher(status, shownObj1, shownObj2, turnPlayer, availableTroops, listOfTerritories, listOfPlayers, continents, territoryMinTroops, territoryMovedTroops, territoryButtons, mapOfAdjacence, attacked, attacker, nil, id)
+    else
+        ["", status, shownObj1, shownObj2, turnPlayer, listOfTerritories, listOfPlayers, territoryMinTroops, territoryButtons, attacked, attacker]
     end
 end
 
 class Main < Gosu::Window  
     def initialize() super(Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT); self.caption = 'RISKyBusiness'; $menuButtons = initMenuButtons end
     def draw () draw_(self, $status, $listOfTerritories, $territoryButtons, $menuButtons, $text, $subtext); end
-    def button_down (id) clicked(self, $menuButtons, $territoryButtons, id, $status); end
+    def button_down (id)
+        $text, $status, $shownObj1, $shownObj2, $turnPlayer, $listOfTerritories, $listOfPlayers, $territoryMinTroops, $territoryButtons, $attacked, $attacker = 
+            clicked(self, id, $menuButtons, $status, $shownObj1, $shownObj2, $turnPlayer, $availableTroops, $listOfTerritories, $listOfPlayers, $continents, $territoryMinTroops, $territoryMovedTroops, $territoryButtons, $mapOfAdjacence, $attacked, $attacker); end
 end
 
 Main.new.show
